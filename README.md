@@ -27,23 +27,32 @@ The AI may reorder the fragments, add transitions, and smooth the style. It **mu
 
 **Nice to have:** fixed and random modes, AI expansion of the theme, an AI-generated cover image, visual polish.
 
-## Tech stack (proposed)
+## Tech stack
 
-- **Nuxt 4 + Nuxt UI** for the frontend and server routes. The event requires Vue.
-- **Real-time:** Nitro WebSockets, or a hosted service (Supabase Realtime, PartyKit, Liveblocks). The team decides at kickoff.
-- **State:** the server owns the room state (players, rounds, timers). A room lives in memory or in one small DB table.
-- **AI:** an LLM API (e.g. Claude) that merges the Chaos Mode fragments. The prompt is strict about keeping each contributor's ideas.
+- **Nuxt 4 + Nuxt UI** for the frontend, plus Nuxt server routes for anything that needs a secret key.
+- **Supabase** for the backend:
+  - **Anonymous sign-in**: each player gets a real user ID with no signup, and a page refresh brings them back to their seat.
+  - **Postgres**: stores rooms, players, fragments and chapters.
+  - **Realtime Postgres Changes**: all clients update live when the room row changes (phase, round, turn, deadline).
+  - **Presence**: shows who is online in the lobby.
+  - **Row Level Security**: in Chaos Mode, players cannot read other players' drafts until the round closes. The database enforces this, not the UI.
+- **AI:** an LLM (Claude) merges the Chaos Mode fragments into a chapter. It runs in a Nuxt server route, so the API key never reaches the browser.
 - **Deploy:** a public URL, so judges and the audience can join from their phones during the demo.
 
-## Possible task split
+### How it works
 
-| Person | Focus |
-| --- | --- |
-| 1 | Real-time room server: join, lobby, round/turn state machine, timers |
-| 2 | Create/join/lobby screens (mobile-first, Nuxt UI) |
-| 3 | Writing/waiting screens, timer and character counter, reconnect after refresh |
-| 4 | AI chapter merge: prompt, streaming, reveal screen with the fragments |
-| 5 | Finished story page, sharing, deploy, demo script |
+```
+rooms      id, code, host_id, theme, mode, rounds_total, char_limit, time_limit_s,
+           status (lobby | writing | merging | reveal | finished),
+           current_round, turn_player_id, phase_ends_at
+players    user_id, room_id, name, seat, joined_at
+fragments  room_id, round, player_id, text          -- RLS: read own, or all once the round has closed
+chapters   room_id, round, text, source_fragment_ids
+```
+
+- **Timers:** the server stores the deadline as `phase_ends_at`, and each client counts down to it locally. No timer runs on the server.
+- **Closing a round:** once everyone has submitted or the deadline passes, any client calls `POST /api/rooms/:id/close-round`. The route closes the round with a conditional `UPDATE ... WHERE status = 'writing' AND current_round = N`, so only one call wins. The winner calls the AI, saves the chapter and moves the room to `reveal`.
+- **If the AI fails:** the reveal screen shows the raw fragments, so the game never gets stuck.
 
 ## Setup
 
@@ -51,7 +60,7 @@ _Coming soon; this will be filled in during the hackathon._
 
 ```bash
 pnpm install
-cp .env.example .env   # add AI API key
+cp .env.example .env   # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server only), AI API key
 pnpm dev
 ```
 
