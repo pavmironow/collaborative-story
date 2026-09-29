@@ -39,6 +39,12 @@ export const playerNameSchema = z.string().trim()
   .min(LIMITS.name.min, 'Enter your name')
   .max(LIMITS.name.max, `Keep your name under ${LIMITS.name.max} characters`)
 
+/**
+ * Network grace: the server accepts a submission until deadline + grace and only closes a
+ * phase by timeout after that, so a text sent at 0:00 is not lost to latency.
+ */
+export const SUBMIT_GRACE_MS = 2000
+
 export interface GameState {
   status: Status
   /** 1-based; 0 in the lobby. */
