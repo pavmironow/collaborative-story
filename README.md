@@ -77,7 +77,7 @@ The AI may reorder the fragments, add transitions, and smooth the style. It **mu
   - **Realtime Postgres Changes**: all clients update live when the room row changes (phase, round, turn, deadline).
   - **Presence**: shows who is online in the lobby.
   - **Row Level Security**: in Chaos Mode, players cannot read other players' drafts until the round closes. The database enforces this, not the UI.
-- **AI:** an LLM (Claude) merges the Chaos Mode fragments into a chapter. It runs in a Nuxt server route, so the API key never reaches the browser.
+- **AI (OpenAI):** merges the Chaos Mode fragments into a chapter with structured output. It runs in a Nuxt server route, so the API key never reaches the browser.
 - **Deploy:** a public URL, so judges and the audience can join from their phones during the demo.
 
 ### How it works
@@ -124,7 +124,7 @@ Requirements: Node 22+ (`nvm use`), pnpm 10, and Docker for local Supabase.
 ```bash
 pnpm install
 pnpm db:start          # starts local Supabase in Docker and prints the URL and keys
-cp .env.example .env   # fill in: API URL, anon key, service_role key, NUXT_ANTHROPIC_API_KEY
+cp .env.example .env   # fill in: API URL, anon key, service_role key, NUXT_OPENAI_API_KEY
 pnpm dev               # http://localhost:3000
 ```
 

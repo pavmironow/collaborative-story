@@ -15,12 +15,12 @@
     "db:reset": "supabase db reset"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.129.0",
     "@iconify-json/lucide": "^1.2.137",
     "@iconify-json/simple-icons": "^1.2.97",
     "@nuxt/ui": "^4.11.2",
     "@supabase/supabase-js": "^2.117.2",
     "nuxt": "^4.5.2",
+    "openai": "^7.23.0",
     "tailwindcss": "^4.3.3",
     "zod": "^4.6.5"
   },
