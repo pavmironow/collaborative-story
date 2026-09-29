@@ -95,6 +95,10 @@ chapters   room_id, round, text, source_fragment_ids
 - **Closing a round:** once everyone has submitted or the deadline passes, any client calls `POST /api/rooms/:id/close-round`. The route closes the round with a conditional `UPDATE ... WHERE status = 'writing' AND current_round = N`, so only one call wins. The winner calls the AI, saves the chapter and moves the room to `reveal`.
 - **If the AI fails:** the reveal screen shows the raw fragments, so the game never gets stuck.
 
+## Features & workflow
+
+The work is split into features F0–F12. **Each feature gets its own `feat/*` branch and its own PR.** Nobody commits directly to `master`. See **[FEATURES.md](FEATURES.md)** for the feature list, dependencies, parallel tracks and PR rules.
+
 ## How we verify
 
 We only write unit tests, using **Vitest**. All game rules are pure functions in `shared/game.ts`, with no Supabase or Vue imports, so they are fast and easy to test. Components and server routes call these functions and don't reimplement the rules.
