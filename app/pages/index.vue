@@ -104,6 +104,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       </UFormField>
 
       <UFormField
+        label="Genre"
+        name="genre"
+        help="Sets the mood for the AI helper, the chapters and the cover."
+      >
+        <RoomGenrePicker v-model="state.genre" />
+      </UFormField>
+
+      <UFormField
         label="Story theme"
         name="theme"
         :hint="`${state.theme.length}/${LIMITS.theme.max}`"
@@ -117,14 +125,10 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           placeholder="A tram in Prague stops at a station that is not on any map."
           class="w-full"
         />
-      </UFormField>
-
-      <UFormField
-        label="Genre"
-        name="genre"
-        help="Sets the mood for the AI chapters and the cover."
-      >
-        <RoomGenrePicker v-model="state.genre" />
+        <RoomThemeHelper
+          v-model="state.theme"
+          :genre="state.genre"
+        />
       </UFormField>
 
       <UFormField
