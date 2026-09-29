@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import {
-  LIMITS, LOBBY, advance, canClose, canStart, canTransition, checkFragment, currentWriter,
+  LIMITS, LOBBY, advance, formatDuration, canClose, canStart, canTransition, checkFragment, currentWriter,
   isLocked, settingsSchema, skipped, turnOrder, type GameState, type Mode, type Settings, type Status
 } from '../shared/game'
 
@@ -232,5 +232,11 @@ describe('settings validation', () => {
     ['unknown mode', { mode: 'battle' }]
   ])('rejects %s', (_, patch) => {
     expect(settingsSchema.safeParse({ ...valid, ...patch }).success).toBe(false)
+  })
+})
+
+describe('formatDuration', () => {
+  it.each([[30, '30 s'], [60, '1 min'], [90, '1 min 30 s'], [120, '2 min'], [185, '3 min 5 s']])('%i s → %s', (s, label) => {
+    expect(formatDuration(s)).toBe(label)
   })
 })

@@ -18,16 +18,26 @@ export const LIMITS = {
 } as const
 
 export const settingsSchema = z.object({
-  theme: z.string().trim().min(LIMITS.theme.min).max(LIMITS.theme.max),
-  mode: z.enum(['fixed', 'random', 'chaos']),
-  roundsTotal: z.number().int().min(LIMITS.rounds.min).max(LIMITS.rounds.max),
-  charLimit: z.number().int().min(LIMITS.charLimit.min).max(LIMITS.charLimit.max),
-  timeLimitS: z.number().int().min(LIMITS.timeLimitS.min).max(LIMITS.timeLimitS.max)
+  theme: z.string().trim()
+    .min(LIMITS.theme.min, `Describe the theme in at least ${LIMITS.theme.min} characters`)
+    .max(LIMITS.theme.max, `Keep the theme under ${LIMITS.theme.max} characters`),
+  mode: z.enum(['fixed', 'random', 'chaos'], 'Choose a mode'),
+  roundsTotal: z.number().int()
+    .min(LIMITS.rounds.min, `At least ${LIMITS.rounds.min} rounds`)
+    .max(LIMITS.rounds.max, `At most ${LIMITS.rounds.max} rounds`),
+  charLimit: z.number().int()
+    .min(LIMITS.charLimit.min, `At least ${LIMITS.charLimit.min} characters`)
+    .max(LIMITS.charLimit.max, `At most ${LIMITS.charLimit.max} characters`),
+  timeLimitS: z.number().int()
+    .min(LIMITS.timeLimitS.min, `At least ${LIMITS.timeLimitS.min} seconds`)
+    .max(LIMITS.timeLimitS.max, `At most ${LIMITS.timeLimitS.max / 60} minutes`)
 })
 
 export type Settings = z.infer<typeof settingsSchema>
 
-export const playerNameSchema = z.string().trim().min(LIMITS.name.min).max(LIMITS.name.max)
+export const playerNameSchema = z.string().trim()
+  .min(LIMITS.name.min, 'Enter your name')
+  .max(LIMITS.name.max, `Keep your name under ${LIMITS.name.max} characters`)
 
 export interface GameState {
   status: Status
@@ -153,6 +163,14 @@ export function checkFragment(text: string, charLimit: number): FragmentCheck {
   if (trimmed.length === 0) return { ok: false, reason: 'empty', length: 0 }
   if (trimmed.length > charLimit) return { ok: false, reason: 'too_long', length: trimmed.length }
   return { ok: true, text: trimmed }
+}
+
+/** 90 → "1 min 30 s", 45 → "45 s", 120 → "2 min". */
+export function formatDuration(seconds: number): string {
+  const m = Math.floor(seconds / 60)
+  const s = seconds % 60
+  if (m === 0) return `${s} s`
+  return s ? `${m} min ${s} s` : `${m} min`
 }
 
 function hash(s: string): number {
