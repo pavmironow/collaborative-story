@@ -23,6 +23,7 @@ export function stateUpdate(next: ReturnType<typeof advance>) {
     current_round: next.round,
     turn_index: next.turnIndex,
     phase_ends_at: next.phaseEndsAt ? new Date(next.phaseEndsAt).toISOString() : null,
+    merge_started_at: null,
     updated_at: new Date().toISOString()
   }
 }
@@ -32,7 +33,7 @@ export function stateUpdate(next: ReturnType<typeof advance>) {
  * of clients at once: the conditional UPDATE lets exactly one caller win.
  * Returns true only for the caller that actually closed it.
  */
-export async function tryClosePhase(room: RoomRow, now = Date.now(), background: (task: Promise<unknown>) => void = t => void t): Promise<boolean> {
+export async function tryClosePhase(room: RoomRow, now = Date.now()): Promise<boolean> {
   if (room.status !== 'writing') return false
   const db = useSupabaseAdmin()
   const players = await loadPlayers(room.id)
@@ -56,8 +57,7 @@ export async function tryClosePhase(room: RoomRow, now = Date.now(), background:
     )
   }
 
-  // The AI merge takes seconds: run it after responding, while clients show "weaving…".
-  if (next.status === 'merging') background(mergeChapter(data[0] as RoomRow).catch(e => console.error('[merge]', e)))
+  // The AI merge is not started here: clients on the "weaving" screen call POST /merge (see claimMerge).
   return true
 }
 
@@ -96,12 +96,27 @@ export async function mergeChapter(room: RoomRow, options: { skipAi?: boolean } 
   await db.from('rooms').update(stateUpdate(next)).eq('id', room.id).eq('status', 'merging').eq('current_round', room.current_round)
 }
 
-/** If a merge got stuck (e.g. the server restarted mid-call), finish the round without AI. */
+/** A claimed merge that has not finished after this long is considered dead and can be taken over. */
 export const MERGE_STUCK_MS = 45_000
-export async function recoverStuckMerge(room: RoomRow): Promise<boolean> {
-  if (room.status !== 'merging' || Date.now() - Date.parse(room.updated_at) < MERGE_STUCK_MS) return false
-  await mergeChapter(room, { skipAi: true })
-  return true
+
+/**
+ * Runs the chapter merge for the current round if nobody else is running it. The first claim
+ * runs the AI merge; a claim taken over from a dead merge (after MERGE_STUCK_MS) finishes the
+ * round without AI so the game never stays stuck. Returns what this call did.
+ */
+export async function claimMerge(room: RoomRow): Promise<'merged' | 'recovered' | 'busy' | 'not_merging'> {
+  if (room.status !== 'merging') return 'not_merging'
+  const db = useSupabaseAdmin()
+  const now = new Date()
+  const stale = new Date(now.getTime() - MERGE_STUCK_MS).toISOString()
+  const takeover = !!room.merge_started_at
+  const { data } = await db.from('rooms').update({ merge_started_at: now.toISOString() })
+    .eq('id', room.id).eq('status', 'merging').eq('current_round', room.current_round)
+    .or(takeover ? `merge_started_at.lt.${stale}` : 'merge_started_at.is.null')
+    .select('*')
+  if (!data?.length) return 'busy'
+  await mergeChapter(data[0] as RoomRow, { skipAi: takeover })
+  return takeover ? 'recovered' : 'merged'
 }
 
 /** Host moves from `reveal` to the next round (or the end). */

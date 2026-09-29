@@ -22,3 +22,6 @@ logs
 .env
 .env.*
 !.env.example
+
+# Netlify local build output
+.netlify

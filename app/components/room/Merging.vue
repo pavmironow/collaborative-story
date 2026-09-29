@@ -3,11 +3,13 @@ import type { RoomRow } from '#shared/room'
 
 const props = defineProps<{ room: RoomRow }>()
 
-// If the merge gets stuck (e.g. the server restarted mid-call), the server finishes the round
-// without AI once asked after its timeout. Ask every few seconds while this screen is shown.
+// Every client asks the server to run the merge; exactly one request runs it (the others get
+// "busy"). Asking again every few seconds lets a later request take over if that one died.
 let timer: ReturnType<typeof setInterval> | undefined
+const ask = () => api(`/api/rooms/${props.room.code}/merge`, { method: 'POST' }).catch(() => {})
 onMounted(() => {
-  timer = setInterval(() => api(`/api/rooms/${props.room.code}/close`, { method: 'POST' }).catch(() => {}), 5000)
+  ask()
+  timer = setInterval(ask, 5000)
 })
 onBeforeUnmount(() => clearInterval(timer))
 </script>

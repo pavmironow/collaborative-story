@@ -17,6 +17,7 @@ export interface RoomRow {
   seed: string
   created_at: string
   updated_at: string
+  merge_started_at: string | null
 }
 
 export interface PlayerRow {

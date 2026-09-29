@@ -7,7 +7,8 @@ let client: Anthropic | undefined
 function anthropic(): Anthropic | null {
   const { anthropicApiKey, anthropicBaseUrl } = useRuntimeConfig()
   if (!anthropicApiKey) return null
-  client ??= new Anthropic({ apiKey: anthropicApiKey, baseURL: anthropicBaseUrl || undefined, timeout: 30_000, maxRetries: 1 })
+  // Retries are handled below within one time budget, so a merge fits in a serverless request.
+  client ??= new Anthropic({ apiKey: anthropicApiKey, baseURL: anthropicBaseUrl || undefined, maxRetries: 0 })
   return client
 }
 
@@ -22,10 +23,16 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
   if (!input.fragments.length) return { ok: false, error: 'no_fragments' }
   const api = anthropic()
   if (!api) return { ok: false, error: 'no_api_key' }
-  const { anthropicModel } = useRuntimeConfig()
+  const { anthropicModel, mergeBudgetMs } = useRuntimeConfig()
+  const deadline = Date.now() + Number(mergeBudgetMs)
 
   let error = 'unknown'
   for (let attempt = 0; attempt < 2; attempt++) {
+    const remaining = deadline - Date.now()
+    if (remaining < 3000) {
+      error = attempt === 0 ? 'timeout' : error
+      break
+    }
     try {
       const response = await api.beta.messages.parse({
         model: anthropicModel,
@@ -36,7 +43,7 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
         output_config: { effort: 'low', format: zodOutputFormat(mergeOutputSchema) },
         system: MERGE_SYSTEM_PROMPT,
         messages: [{ role: 'user', content: buildMergeUserMessage(input) }]
-      })
+      }, { timeout: remaining })
       if (response.stop_reason === 'refusal') {
         error = 'refused'
         continue
@@ -51,7 +58,9 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
     } catch (e) {
       if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return { ok: false, error: 'auth' }
       if (e instanceof Anthropic.BadRequestError || e instanceof Anthropic.NotFoundError) return { ok: false, error: `api_${e.status}` }
-      error = e instanceof Anthropic.APIError ? `api_${e.status ?? 'connection'}` : 'error'
+      error = e instanceof Anthropic.APIConnectionTimeoutError
+        ? 'timeout'
+        : e instanceof Anthropic.APIError ? `api_${e.status ?? 'connection'}` : 'error'
     }
   }
   console.warn(`[merge] falling back to original fragments: ${error}`)
