@@ -54,6 +54,23 @@ chapters   room_id, round, text, source_fragment_ids
 - **Closing a round:** once everyone has submitted or the deadline passes, any client calls `POST /api/rooms/:id/close-round`. The route closes the round with a conditional `UPDATE ... WHERE status = 'writing' AND current_round = N`, so only one call wins. The winner calls the AI, saves the chapter and moves the room to `reveal`.
 - **If the AI fails:** the reveal screen shows the raw fragments, so the game never gets stuck.
 
+## How we verify
+
+We only write unit tests, using **Vitest**. All game rules are pure functions in `shared/game.ts`, with no Supabase or Vue imports, so they are fast and easy to test. Components and server routes call these functions and don't reimplement the rules.
+
+The tests cover:
+- **Turn order:** fixed order, and random order with no repeats within a round (everyone writes once per round).
+- **Closing a round:** a round can close when everyone has submitted or the deadline has passed, and not before.
+- **Missed turns:** a missed turn is marked as skipped, and the player still takes part in later rounds.
+- **End of the game:** the game finishes after `rounds_total`, even if some turns were skipped.
+- **Validation:** the character limit, the minimum of 2 rounds, and allowed settings ranges.
+
+```bash
+pnpm test        # vitest run
+```
+
+Run `pnpm test` before every push. Nothing else is automated. Everything else (realtime, RLS, AI merge, UI) is checked by hand on real devices.
+
 ## Setup
 
 _Coming soon; this will be filled in during the hackathon._
