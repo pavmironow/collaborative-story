@@ -24,6 +24,12 @@ const timeHint = computed(() => state.mode === 'chaos' ? 'Per round: everyone wr
 const submitting = ref(false)
 const error = ref('')
 
+const joinCode = ref('')
+const validCode = computed(() => /^[A-Z0-9]{5}$/.test(joinCode.value.trim().toUpperCase()))
+function joinRoom() {
+  if (validCode.value) navigateTo(`/r/${joinCode.value.trim().toUpperCase()}`)
+}
+
 async function onSubmit(event: FormSubmitEvent<Schema>) {
   submitting.value = true
   error.value = ''
@@ -47,10 +53,38 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
       Write a story together with friends in short, timed rounds. Create a room and share the link.
     </p>
 
+    <form
+      class="mt-6 flex gap-2"
+      aria-label="Join a room with a code"
+      @submit.prevent="joinRoom"
+    >
+      <UInput
+        v-model="joinCode"
+        placeholder="Have a code? e.g. NEG9G"
+        aria-label="Room code"
+        :maxlength="5"
+        autocapitalize="characters"
+        class="min-w-0 flex-1 font-mono uppercase"
+      />
+      <UButton
+        type="submit"
+        color="neutral"
+        variant="outline"
+        :disabled="!validCode"
+      >
+        Join room
+      </UButton>
+    </form>
+
+    <USeparator
+      label="or create a new story"
+      class="mt-8"
+    />
+
     <UForm
       :schema="schema"
       :state="state"
-      class="mt-8 space-y-6"
+      class="mt-6 space-y-6"
       @submit="onSubmit"
     >
       <UFormField
