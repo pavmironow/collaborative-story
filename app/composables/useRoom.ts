@@ -16,11 +16,14 @@ export function useRoom(code: string) {
   const submitters = ref(new Set<string>())
   /** serverTime ≈ Date.now() + clockOffset */
   const clockOffset = ref(0)
-  const online = ref(new Set<string>())
   const userId = ref<string | null>(null)
   const status = ref<'loading' | 'ready' | 'not_found' | 'error'>('loading')
   const connected = ref(false)
+  const online = ref(new Set<string>())
+  const networkOnline = ref(true)
   let channel: RealtimeChannel | undefined
+  let resync: ReturnType<typeof setInterval> | undefined
+  const timers: ReturnType<typeof setTimeout>[] = []
 
   /**
    * Realtime events can trigger overlapping reloads. Only the newest request may write its
@@ -100,9 +103,29 @@ export function useRoom(code: string) {
         connected.value = state === 'SUBSCRIBED'
         if (state === 'SUBSCRIBED') {
           await channel!.track({ at: Date.now() })
-          await refresh() // catch up on anything missed while (re)connecting
+          // Catch up on anything missed while (re)connecting. Database events can still be lost
+          // for a moment after SUBSCRIBED, so re-read again shortly afterwards.
+          await safeRefresh()
+          timers.push(setTimeout(safeRefresh, 1500), setTimeout(safeRefresh, 4000))
         }
       })
+  }
+
+  /** Never throws: a failed background re-read just waits for the next one. */
+  async function safeRefresh() {
+    try {
+      await refresh()
+    } catch {
+      // offline or server unreachable: the next resync retries
+    }
+  }
+
+  function onVisible() {
+    if (document.visibilityState === 'visible') safeRefresh()
+  }
+  function onNetwork() {
+    networkOnline.value = navigator.onLine
+    if (navigator.onLine) safeRefresh()
   }
 
   onMounted(async () => {
@@ -115,6 +138,12 @@ export function useRoom(code: string) {
       }
       subscribe(room.value.id)
       status.value = 'ready'
+      // Safety net: realtime is the fast path, but a lost event must never leave a screen stuck.
+      resync = setInterval(safeRefresh, 5000)
+      document.addEventListener('visibilitychange', onVisible)
+      window.addEventListener('online', onNetwork)
+      window.addEventListener('offline', onNetwork)
+      networkOnline.value = navigator.onLine
     } catch {
       status.value = 'error'
     }
@@ -122,7 +151,12 @@ export function useRoom(code: string) {
 
   onBeforeUnmount(() => {
     if (channel) supabase.removeChannel(channel)
+    clearInterval(resync)
+    timers.forEach(clearTimeout)
+    document.removeEventListener('visibilitychange', onVisible)
+    window.removeEventListener('online', onNetwork)
+    window.removeEventListener('offline', onNetwork)
   })
 
-  return { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, refresh }
+  return { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, networkOnline, refresh }
 }
