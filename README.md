@@ -30,7 +30,8 @@ These rules hold during every game. If a change breaks one of them, it's a bug, 
 
 **Game flow**
 - 🧪 The game only moves forward: `lobby → writing → (merging → reveal) → … → finished`. It never goes back or skips a step.
-- 🧪 A round closes **only** when everyone has submitted or the deadline has passed, and it closes **exactly once**, even if several clients ask at the same time.
+- 🧪 A round closes **only** when everyone has submitted or the deadline has passed.
+- A round closes **exactly once**, even if several clients ask at the same time. The conditional `UPDATE` in `close-round` enforces this.
 - 🧪 The game **always finishes** after `rounds_total` rounds, even if some or all turns were skipped.
 - Every client shows the same state: the same round, turn and deadline.
 
