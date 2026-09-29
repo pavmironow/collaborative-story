@@ -16,6 +16,7 @@ export interface RoomRow {
   phase_ends_at: string | null
   seed: string
   created_at: string
+  updated_at: string
 }
 
 export interface PlayerRow {
@@ -24,6 +25,25 @@ export interface PlayerRow {
   name: string
   seat: number
   joined_at: string
+}
+
+export interface FragmentRow {
+  id: string
+  room_id: string
+  round: number
+  player_id: string
+  status: 'submitted' | 'skipped'
+  text: string | null
+  created_at: string
+}
+
+export interface ChapterRow {
+  room_id: string
+  round: number
+  text: string | null
+  source_fragment_ids: string[]
+  error: string | null
+  created_at: string
 }
 
 export function toGameState(room: RoomRow): GameState {

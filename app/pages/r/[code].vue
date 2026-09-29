@@ -1,6 +1,6 @@
 <script setup lang="ts">
 const code = (useRoute().params.code as string).toUpperCase()
-const { room, players, online, userId, me, isHost, status, connected, refresh } = useRoom(code)
+const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, refresh } = useRoom(code)
 const hostName = computed(() => players.value.find(p => p.user_id === room.value?.host_id)?.name ?? 'Someone')
 
 useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collaborative Story` : 'Collaborative Story') })
@@ -78,15 +78,67 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
         :is-host="isHost"
       />
 
-      <div v-else>
-        <!-- F5 replaces this with the writing / waiting screens. -->
-        <h1 class="text-2xl font-bold">
-          The story has started
-        </h1>
-        <p class="mt-2 text-muted">
-          Round {{ room.current_round }} of {{ room.rounds_total }} · status: {{ room.status }}
+      <RoomChaosWriting
+        v-else-if="room.status === 'writing' && room.mode === 'chaos'"
+        :key="`write-${room.current_round}`"
+        :room="room"
+        :players="players"
+        :fragments="fragments"
+        :chapters="chapters"
+        :submitters="submitters"
+        :user-id="userId!"
+        :clock-offset="clockOffset"
+        @submitted="refresh"
+      />
+
+      <div
+        v-else-if="room.status === 'merging'"
+        class="py-24 text-center"
+        role="status"
+      >
+        <UIcon
+          name="i-lucide-sparkles"
+          class="size-8 animate-pulse text-primary"
+        />
+        <p class="mt-3 text-lg font-semibold">
+          Weaving everyone’s ideas into chapter {{ room.current_round }}…
         </p>
       </div>
+
+      <RoomChaosReveal
+        v-else-if="room.status === 'reveal'"
+        :room="room"
+        :players="players"
+        :fragments="fragments"
+        :chapters="chapters"
+        :is-host="isHost"
+      />
+
+      <div
+        v-else-if="room.status === 'finished'"
+        class="space-y-4"
+      >
+        <!-- F7 replaces this with the finished story page. -->
+        <h1 class="text-2xl font-bold">
+          The story is finished
+        </h1>
+        <RoomStorySoFar
+          :theme="room.theme"
+          :chapters="chapters"
+          :fragments="fragments"
+          :players="players"
+          :before-round="room.rounds_total + 1"
+        />
+      </div>
+
+      <UAlert
+        v-else
+        color="neutral"
+        variant="subtle"
+        icon="i-lucide-construction"
+        title="This mode is not available yet"
+        description="Fixed and random order are coming soon. Try Chaos Mode."
+      />
     </template>
   </UContainer>
 </template>
