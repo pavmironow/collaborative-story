@@ -134,7 +134,7 @@ pnpm dev               # http://localhost:3000
 | `pnpm lint` / `pnpm typecheck` | ESLint / vue-tsc |
 | `pnpm db:reset` | Recreates the local database from `supabase/migrations` |
 
-CI (GitHub Actions) will run lint, typecheck and tests on every PR (workflow file pending).
+CI (GitHub Actions) runs lint, typecheck and tests on every PR.
 
 ## AI usage
 
