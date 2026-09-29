@@ -17,7 +17,26 @@ const mine = computed(() => props.fragments.find(f => f.round === props.room.cur
 const done = computed(() => !!mine.value || props.submitters.has(props.userId))
 const doneCount = computed(() => props.players.filter(p => props.submitters.has(p.user_id)).length)
 
-const text = ref('')
+// Unsent text survives a refresh or a closed tab (per room, round and player).
+const draftKey = computed(() => `draft:${props.room.id}:${props.room.current_round}:${props.userId}`)
+function readDraft(): string {
+  try {
+    return localStorage.getItem(draftKey.value) ?? ''
+  } catch {
+    return ''
+  }
+}
+function writeDraft(value: string | null) {
+  try {
+    if (value) localStorage.setItem(draftKey.value, value)
+    else localStorage.removeItem(draftKey.value)
+  } catch {
+    // storage unavailable (private mode): drafts just aren't kept
+  }
+}
+
+const text = ref(readDraft())
+watch(text, value => writeDraft(value))
 const length = computed(() => text.value.trim().length)
 const over = computed(() => length.value > props.room.char_limit)
 const canSubmit = computed(() => checkFragment(text.value, props.room.char_limit).ok)
@@ -30,6 +49,7 @@ async function submit() {
   error.value = ''
   try {
     await api(`/api/rooms/${props.room.code}/submit`, { method: 'POST', body: { text: text.value } })
+    writeDraft(null)
     emit('submitted')
   } catch (e) {
     error.value = (e as { statusMessage?: string }).statusMessage ?? 'Could not send your text. Check your connection and try again.'

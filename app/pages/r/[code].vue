@@ -2,7 +2,7 @@
 import { buildStory } from '#shared/story'
 
 const code = (useRoute().params.code as string).toUpperCase()
-const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, refresh } = useRoom(code)
+const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, networkOnline, refresh } = useRoom(code)
 const story = computed(() => room.value ? buildStory(room.value, players.value, fragments.value, chapters.value) : null)
 const hostName = computed(() => players.value.find(p => p.user_id === room.value?.host_id)?.name ?? 'Someone')
 
@@ -46,13 +46,14 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
 
     <template v-else>
       <UAlert
-        v-if="!connected"
+        v-if="!networkOnline || !connected"
         color="warning"
         variant="subtle"
         icon="i-lucide-wifi-off"
-        title="Reconnecting…"
-        description="Live updates are paused. Your place in the room is kept."
+        :title="networkOnline ? 'Reconnecting…' : 'You are offline'"
+        description="Your place in the room is kept. The screen catches up as soon as the connection is back."
         class="mb-4"
+        role="status"
       />
 
       <RoomJoinForm
