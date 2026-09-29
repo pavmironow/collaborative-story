@@ -13,10 +13,13 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     supabaseServiceRoleKey: '',
-    anthropicApiKey: '',
-    anthropicModel: 'claude-opus-5-5',
+    openaiApiKey: '',
+    /** Models are configurable so they can match what the account has access to. */
+    openaiTextModel: 'gpt-5.5',
+    openaiFastModel: 'gpt-5.4-mini',
+    openaiImageModel: 'gpt-image-2',
     /** Optional: point the SDK at another endpoint (e.g. a proxy). */
-    anthropicBaseUrl: '',
+    openaiBaseUrl: '',
     /** Total time for the AI merge incl. one retry; keep under the host's function timeout. */
     mergeBudgetMs: 20000,
     public: {
