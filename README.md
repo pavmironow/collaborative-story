@@ -4,6 +4,20 @@
 
 **Looking for teammates (up to 5 total).** If you like Vue, real-time apps, or AI prompting, come and join.
 
+## Goal
+
+**Problem:** Group creative activities, such as icebreakers, team exercises and writing warm-ups, need setup and a moderator. They usually end with a pile of disconnected ideas instead of one shared result.
+
+**Goal:** Let a group of people on their own devices go from a shared link to a finished, shareable story in about 10 minutes. Everyone's contribution should be visible, and AI should turn the parallel ideas into one story without dropping anyone's part.
+
+**Hackathon objectives:** the demo is judged against these.
+1. A new player opens the link on a phone or laptop and joins **without verbal instructions**.
+2. Every player always knows **whose turn it is, how much time is left and how many rounds remain**.
+3. Every player gets **exactly one fair chance to contribute per round**. Missed turns are skipped, not rewritten by AI.
+4. In Chaos Mode, **nobody can see another player's draft** before the round closes. The AI chapter visibly includes the key ideas of **every** submitted fragment, shown next to the originals.
+5. The group ends with a **finished story that credits its authors** and can be opened through a link.
+6. The demo is **a real group playing live** on separate devices, not a walkthrough of screens.
+
 ## The idea in 30 seconds
 
 1. The host creates a room, types a theme (*"A Prague tram stops at a station that is not on any map"*), and picks the rules.
