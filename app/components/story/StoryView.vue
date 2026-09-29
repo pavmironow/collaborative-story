@@ -1,0 +1,79 @@
+<script setup lang="ts">
+import type { Story } from '#shared/story'
+
+defineProps<{ story: Story }>()
+</script>
+
+<template>
+  <article class="space-y-8">
+    <header>
+      <p class="text-sm font-medium text-primary">
+        A story written together
+      </p>
+      <h1 class="mt-1 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl">
+        {{ story.theme }}
+      </h1>
+      <p class="mt-3 text-muted">
+        by {{ story.authors.map(a => a.name).join(', ') }}
+      </p>
+    </header>
+
+    <section
+      v-for="chapter in story.chapters"
+      :key="chapter.round"
+      :aria-labelledby="`chapter-${chapter.round}`"
+    >
+      <h2
+        :id="`chapter-${chapter.round}`"
+        class="text-xs font-semibold tracking-wide text-muted uppercase"
+      >
+        Chapter {{ chapter.round }}
+      </h2>
+      <div class="mt-3 space-y-5">
+        <div
+          v-for="(p, i) in chapter.paragraphs"
+          :key="i"
+        >
+          <p class="font-serif text-lg leading-relaxed sm:text-xl">
+            {{ p.text }}
+          </p>
+          <p class="mt-1 text-xs text-muted">
+            {{ chapter.woven ? 'from' : '—' }} {{ p.by.join(', ') }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <p
+      v-if="!story.chapters.length"
+      class="text-muted"
+    >
+      Nobody wrote anything in this story.
+    </p>
+
+    <footer class="border-t border-default pt-6">
+      <h2 class="font-semibold">
+        Writers
+      </h2>
+      <ul class="mt-2 flex flex-wrap gap-2">
+        <li
+          v-for="a in story.authors"
+          :key="a.name"
+        >
+          <UBadge
+            variant="subtle"
+            color="neutral"
+          >
+            {{ a.name }} · {{ a.contributions }} {{ a.contributions === 1 ? 'part' : 'parts' }}
+          </UBadge>
+        </li>
+      </ul>
+      <p
+        v-if="story.mode === 'chaos'"
+        class="mt-3 text-xs text-muted"
+      >
+        Chaos Mode: everyone wrote each round at the same time, and AI wove the parts together.
+      </p>
+    </footer>
+  </article>
+</template>

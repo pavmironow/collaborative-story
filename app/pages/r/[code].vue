@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { buildStory } from '#shared/story'
+
 const code = (useRoute().params.code as string).toUpperCase()
 const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, refresh } = useRoom(code)
+const story = computed(() => room.value ? buildStory(room.value, players.value, fragments.value, chapters.value) : null)
 const hostName = computed(() => players.value.find(p => p.user_id === room.value?.host_id)?.name ?? 'Someone')
 
 useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collaborative Story` : 'Collaborative Story') })
@@ -107,19 +110,32 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
 
       <div
         v-else-if="room.status === 'finished'"
-        class="space-y-4"
+        class="space-y-8"
       >
-        <!-- F7 replaces this with the finished story page. -->
-        <h1 class="text-2xl font-bold">
-          The story is finished
-        </h1>
-        <RoomStorySoFar
-          :theme="room.theme"
-          :chapters="chapters"
-          :fragments="fragments"
-          :players="players"
-          :before-round="room.rounds_total + 1"
+        <UAlert
+          color="success"
+          variant="subtle"
+          icon="i-lucide-party-popper"
+          title="The story is finished!"
+          description="Share the link so anyone can read it, even without joining."
         />
+        <StoryView :story="story!" />
+        <div class="space-y-3">
+          <StoryShareButton
+            :code="room.code"
+            :title="room.theme"
+          />
+          <UButton
+            :to="`/s/${room.code}`"
+            size="xl"
+            block
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-book-open"
+          >
+            Open the reading page
+          </UButton>
+        </div>
       </div>
 
       <UAlert
