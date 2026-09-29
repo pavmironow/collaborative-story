@@ -18,6 +18,7 @@ export interface Story {
   code: string
   theme: string
   mode: RoomRow['mode']
+  genre: string
   authors: { name: string, contributions: number }[]
   chapters: StoryChapter[]
   finished: boolean
@@ -54,6 +55,7 @@ export function buildStory(room: RoomRow, players: PlayerRow[], fragments: Fragm
     code: room.code,
     theme: room.theme,
     mode: room.mode,
+    genre: room.genre,
     authors: seats.map(p => ({ name: p.name, contributions: counts.get(p.user_id) ?? 0 })),
     chapters: out,
     finished: room.status === 'finished'

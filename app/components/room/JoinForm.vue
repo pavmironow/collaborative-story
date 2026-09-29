@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { LIMITS, playerNameSchema } from '#shared/game'
 import type { RoomRow } from '#shared/room'
 import { MODE_LABELS } from '#shared/room'
+import { getGenre } from '#shared/genres'
 
 const props = defineProps<{ room: RoomRow, hostName: string, playerCount: number }>()
 const emit = defineEmits<{ joined: [] }>()
@@ -35,7 +36,7 @@ async function onSubmit() {
       “{{ room.theme }}”
     </h1>
     <p class="mt-2 text-muted">
-      {{ MODE_LABELS[room.mode].label }} · {{ room.rounds_total }} rounds · {{ playerCount }} {{ playerCount === 1 ? 'player' : 'players' }} so far
+      {{ getGenre(room.genre).emoji }} {{ getGenre(room.genre).label }} · {{ MODE_LABELS[room.mode].label }} · {{ room.rounds_total }} rounds · {{ playerCount }} {{ playerCount === 1 ? 'player' : 'players' }} so far
     </p>
 
     <UForm

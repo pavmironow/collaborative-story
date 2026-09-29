@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { Story } from '#shared/story'
+import { getGenre } from '#shared/genres'
 
 defineProps<{ story: Story }>()
 </script>
@@ -8,7 +9,7 @@ defineProps<{ story: Story }>()
   <article class="space-y-8">
     <header>
       <p class="text-sm font-medium text-primary">
-        A story written together
+        {{ getGenre(story.genre).emoji }} {{ getGenre(story.genre).label }} · a story written together
       </p>
       <h1 class="mt-1 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl">
         {{ story.theme }}

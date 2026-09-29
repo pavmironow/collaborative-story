@@ -7,6 +7,7 @@ export interface RoomRow {
   host_id: string
   theme: string
   mode: Mode
+  genre: string
   rounds_total: number
   char_limit: number
   time_limit_s: number
@@ -61,6 +62,7 @@ export function toSettings(room: RoomRow): Settings {
   return {
     theme: room.theme,
     mode: room.mode,
+    genre: room.genre as Settings['genre'],
     roundsTotal: room.rounds_total,
     charLimit: room.char_limit,
     timeLimitS: room.time_limit_s

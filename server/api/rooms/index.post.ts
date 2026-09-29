@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { playerNameSchema, settingsSchema } from '#shared/game'
+import { resolveGenre } from '#shared/genres'
 
 const bodySchema = settingsSchema.extend({ hostName: playerNameSchema })
 
@@ -16,12 +17,12 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 422, statusMessage: 'Invalid settings', data: z.flattenError(parsed.error).fieldErrors })
   }
-  const { hostName, theme, mode, roundsTotal, charLimit, timeLimitS } = parsed.data
+  const { hostName, theme, mode, genre, roundsTotal, charLimit, timeLimitS } = parsed.data
   const db = useSupabaseAdmin()
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: room, error } = await db.from('rooms').insert({
-      code: generateCode(), host_id: userId, theme, mode,
+      code: generateCode(), host_id: userId, theme, mode, genre: resolveGenre(genre),
       rounds_total: roundsTotal, char_limit: charLimit, time_limit_s: timeLimitS
     }).select('id, code').single()
 

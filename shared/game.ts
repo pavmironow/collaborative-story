@@ -4,6 +4,7 @@
  * is covered by tests/game.test.ts.
  */
 import { z } from 'zod'
+import { GENRE_IDS, SURPRISE } from './genres'
 
 export type Mode = 'fixed' | 'random' | 'chaos'
 export type Status = 'lobby' | 'writing' | 'merging' | 'reveal' | 'finished'
@@ -22,6 +23,7 @@ export const settingsSchema = z.object({
     .min(LIMITS.theme.min, `Describe the theme in at least ${LIMITS.theme.min} characters`)
     .max(LIMITS.theme.max, `Keep the theme under ${LIMITS.theme.max} characters`),
   mode: z.enum(['fixed', 'random', 'chaos'], 'Choose a mode'),
+  genre: z.enum([...GENRE_IDS, SURPRISE], 'Choose a genre'),
   roundsTotal: z.number().int()
     .min(LIMITS.rounds.min, `At least ${LIMITS.rounds.min} rounds`)
     .max(LIMITS.rounds.max, `At most ${LIMITS.rounds.max} rounds`),
