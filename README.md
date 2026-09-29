@@ -18,6 +18,32 @@
 5. The group ends with a **finished story that credits its authors** and can be opened through a link.
 6. The demo is **a real group playing live** on separate devices, not a walkthrough of screens.
 
+## What must never break
+
+These rules hold during every game. If a change breaks one of them, it's a bug, even if the UI looks fine. The ones marked 🧪 are enforced in `shared/game.ts` and covered by unit tests.
+
+**Fairness**
+- 🧪 Each player gets **exactly one** turn per round: never zero (unless skipped), never two.
+- 🧪 In random order, nobody is picked twice before everyone has written in that round.
+- 🧪 The player list and rules are **locked once the game starts**. Players can't join or change settings mid-game.
+- 🧪 A missed turn is marked **skipped**. AI never writes on a player's behalf, and the player stays in later rounds.
+
+**Game flow**
+- 🧪 The game only moves forward: `lobby → writing → (merging → reveal) → … → finished`. It never goes back or skips a step.
+- 🧪 A round closes **only** when everyone has submitted or the deadline has passed, and it closes **exactly once**, even if several clients ask at the same time.
+- 🧪 The game **always finishes** after `rounds_total` rounds, even if some or all turns were skipped.
+- Every client shows the same state: the same round, turn and deadline.
+
+**Contributions**
+- 🧪 A submission longer than the character limit is rejected. Text is never silently cut.
+- A submitted fragment is **never lost or changed**. The original text is kept exactly as written.
+- In Chaos Mode, **nobody can read another player's draft** before the round closes. The database (RLS) enforces this, not the UI.
+
+**Resilience**
+- A page refresh or reconnect brings the player back to **their own seat** in the current phase.
+- If the AI fails or is slow, **the game continues**: the reveal screen shows the original fragments and the next round can start.
+- The finished story stays readable through its link **without a cover image or any AI output**.
+
 ## The idea in 30 seconds
 
 1. The host creates a room, types a theme (*"A Prague tram stops at a station that is not on any map"*), and picks the rules.
@@ -78,6 +104,7 @@ The tests cover:
 - **Missed turns:** a missed turn is marked as skipped, and the player still takes part in later rounds.
 - **End of the game:** the game finishes after `rounds_total`, even if some turns were skipped.
 - **Validation:** the character limit, the minimum of 2 rounds, and allowed settings ranges.
+- Every 🧪 rule in [What must never break](#what-must-never-break).
 
 ```bash
 pnpm test        # vitest run
