@@ -1,4 +1,5 @@
 export default defineEventHandler(async () => {
-  const { error } = await useSupabaseAdmin().from('rooms').select('id', { head: true, count: 'exact' })
-  return { ok: true, database: error ? `error: ${error.message}` : 'ok' }
+  // Not a HEAD request: supabase-js reports no error for a HEAD 404 (missing table).
+  const { error } = await useSupabaseAdmin().from('rooms').select('id').limit(1)
+  return { ok: !error, database: error ? `error: ${error.message}` : 'ok' }
 })
