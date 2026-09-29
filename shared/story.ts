@@ -1,0 +1,61 @@
+/** Turns room rows into the finished, credited story. Used by the share page and the room page. */
+import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from './room'
+
+export interface StoryParagraph {
+  text: string
+  /** Author names, in seat order. */
+  by: string[]
+}
+
+export interface StoryChapter {
+  round: number
+  /** True when the paragraphs are an AI chapter; false when they are the original parts. */
+  woven: boolean
+  paragraphs: StoryParagraph[]
+}
+
+export interface Story {
+  code: string
+  theme: string
+  mode: RoomRow['mode']
+  authors: { name: string, contributions: number }[]
+  chapters: StoryChapter[]
+  finished: boolean
+}
+
+export function buildStory(room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[]): Story {
+  const seats = [...players].sort((a, b) => a.seat - b.seat)
+  const nameOf = new Map(seats.map(p => [p.user_id, p.name]))
+  const seatOf = new Map(seats.map(p => [p.user_id, p.seat]))
+  const submitted = fragments.filter(f => f.status === 'submitted' && f.text)
+  const authorOfFragment = new Map(submitted.map(f => [f.id, f.player_id]))
+  const bySeat = (ids: string[]) => [...new Set(ids)].sort((a, b) => (seatOf.get(a) ?? 0) - (seatOf.get(b) ?? 0)).map(id => nameOf.get(id) ?? 'Someone')
+
+  const lastRound = room.status === 'finished' ? room.rounds_total : room.current_round
+  const out: StoryChapter[] = []
+  for (let round = 1; round <= lastRound; round++) {
+    const parts = submitted.filter(f => f.round === round)
+    const chapter = chapters.find(c => c.round === round)
+    if (chapter?.text && chapter.paragraphs?.length) {
+      out.push({
+        round,
+        woven: true,
+        paragraphs: chapter.paragraphs.map(p => ({ text: p.text, by: bySeat(p.fragmentIds.map(id => authorOfFragment.get(id)).filter((x): x is string => !!x)) }))
+      })
+    } else if (parts.length) {
+      // Ordered modes (and Chaos rounds without an AI chapter): the players' own text, in writing order.
+      out.push({ round, woven: false, paragraphs: parts.map(f => ({ text: f.text!, by: bySeat([f.player_id]) })) })
+    }
+  }
+
+  const counts = new Map<string, number>()
+  for (const f of submitted) counts.set(f.player_id, (counts.get(f.player_id) ?? 0) + 1)
+  return {
+    code: room.code,
+    theme: room.theme,
+    mode: room.mode,
+    authors: seats.map(p => ({ name: p.name, contributions: counts.get(p.user_id) ?? 0 })),
+    chapters: out,
+    finished: room.status === 'finished'
+  }
+}
