@@ -8,7 +8,7 @@ const PLAYERS = ['ana', 'ben', 'cid', 'dan']
 const T0 = 1_000_000
 
 function settings(mode: Mode, roundsTotal = 2): Settings {
-  return { theme: 'A tram stops at a station that is not on any map', mode, roundsTotal, charLimit: 300, timeLimitS: 60 }
+  return { theme: 'A tram stops at a station that is not on any map', mode, genre: 'adventure', roundsTotal, charLimit: 300, timeLimitS: 60 }
 }
 
 /** Plays a whole game and records who wrote in each round and every status visited. */

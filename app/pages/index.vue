@@ -3,6 +3,7 @@ import type { FormSubmitEvent } from '@nuxt/ui'
 import type { z } from 'zod'
 import { LIMITS, formatDuration, playerNameSchema, settingsSchema, type Mode } from '#shared/game'
 import { MODE_LABELS } from '#shared/room'
+import { DEFAULT_GENRE } from '#shared/genres'
 
 const schema = settingsSchema.extend({ hostName: playerNameSchema })
 type Schema = z.output<typeof schema>
@@ -11,6 +12,7 @@ const state = reactive<Schema>({
   hostName: '',
   theme: '',
   mode: 'chaos',
+  genre: DEFAULT_GENRE,
   roundsTotal: LIMITS.rounds.default,
   charLimit: LIMITS.charLimit.default,
   timeLimitS: LIMITS.timeLimitS.default
@@ -115,6 +117,14 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           placeholder="A tram in Prague stops at a station that is not on any map."
           class="w-full"
         />
+      </UFormField>
+
+      <UFormField
+        label="Genre"
+        name="genre"
+        help="Sets the mood for the AI chapters and the cover."
+      >
+        <RoomGenrePicker v-model="state.genre" />
       </UFormField>
 
       <UFormField

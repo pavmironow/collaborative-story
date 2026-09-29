@@ -1,6 +1,7 @@
 import { advance, canClose, skipped, SUBMIT_GRACE_MS, turnOrder } from '#shared/game'
 import type { PlayerRow, RoomRow } from '#shared/room'
 import { toGameState, toSettings } from '#shared/room'
+import { getGenre } from '#shared/genres'
 
 /** Who must write in the current phase: everyone in Chaos Mode, the current writer otherwise. */
 export function expectedWriters(room: RoomRow, players: PlayerRow[]): string[] {
@@ -81,7 +82,7 @@ export async function mergeChapter(room: RoomRow, options: { skipAi?: boolean } 
 
   const result = options.skipAi
     ? { ok: false as const, error: 'timeout' }
-    : await generateChapter({ theme: room.theme, storySoFar, fragments: current })
+    : await generateChapter({ theme: room.theme, genreTone: getGenre(room.genre).tone, storySoFar, fragments: current })
 
   await db.from('chapters').upsert({
     room_id: room.id,
