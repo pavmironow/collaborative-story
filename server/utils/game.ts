@@ -17,7 +17,7 @@ export async function submittedIds(room: RoomRow): Promise<string[]> {
   return data.map(f => f.player_id as string)
 }
 
-function stateUpdate(next: ReturnType<typeof advance>) {
+export function stateUpdate(next: ReturnType<typeof advance>) {
   return {
     status: next.status,
     current_round: next.round,
@@ -32,7 +32,7 @@ function stateUpdate(next: ReturnType<typeof advance>) {
  * of clients at once: the conditional UPDATE lets exactly one caller win.
  * Returns true only for the caller that actually closed it.
  */
-export async function tryClosePhase(room: RoomRow, now = Date.now()): Promise<boolean> {
+export async function tryClosePhase(room: RoomRow, now = Date.now(), background: (task: Promise<unknown>) => void = t => void t): Promise<boolean> {
   if (room.status !== 'writing') return false
   const db = useSupabaseAdmin()
   const players = await loadPlayers(room.id)
@@ -56,25 +56,52 @@ export async function tryClosePhase(room: RoomRow, now = Date.now()): Promise<bo
     )
   }
 
-  if (next.status === 'merging') await mergeChapter(data[0] as RoomRow)
+  // The AI merge takes seconds: run it after responding, while clients show "weaving…".
+  if (next.status === 'merging') background(mergeChapter(data[0] as RoomRow).catch(e => console.error('[merge]', e)))
   return true
 }
 
 /**
- * Builds the round's chapter and moves the room to `reveal`. Until the AI merge (F6) exists,
- * the chapter has no text and the reveal screen shows the original fragments.
+ * Builds the round's chapter with the AI merge and moves the room to `reveal`. If the AI is
+ * unavailable or its chapter drops a contribution, the chapter keeps no text and the reveal
+ * screen shows the original fragments instead: the game always continues.
  */
-export async function mergeChapter(room: RoomRow): Promise<void> {
+export async function mergeChapter(room: RoomRow, options: { skipAi?: boolean } = {}): Promise<void> {
   const db = useSupabaseAdmin()
-  const { data: fragments } = await db.from('fragments').select('id')
-    .eq('room_id', room.id).eq('round', room.current_round).eq('status', 'submitted')
+  const [{ data: fragments }, { data: previous }] = await Promise.all([
+    db.from('fragments').select('id, round, text, status, created_at').eq('room_id', room.id).lte('round', room.current_round).order('created_at'),
+    db.from('chapters').select('round, text').eq('room_id', room.id).lt('round', room.current_round).order('round')
+  ])
+  const submitted = (fragments ?? []).filter(f => f.status === 'submitted')
+  const current = submitted.filter(f => f.round === room.current_round).map(f => ({ id: f.id as string, text: f.text as string }))
+  const storySoFar = Array.from({ length: room.current_round - 1 }, (_, i) => i + 1).map(round =>
+    previous?.find(c => c.round === round)?.text
+    ?? submitted.filter(f => f.round === round).map(f => f.text).join('\n')
+  ).filter(Boolean) as string[]
+
+  const result = options.skipAi
+    ? { ok: false as const, error: 'timeout' }
+    : await generateChapter({ theme: room.theme, storySoFar, fragments: current })
+
   await db.from('chapters').upsert({
-    room_id: room.id, round: room.current_round, text: null,
-    source_fragment_ids: (fragments ?? []).map(f => f.id), error: 'not_generated'
+    room_id: room.id,
+    round: room.current_round,
+    text: result.ok ? result.chapter.text : null,
+    paragraphs: result.ok ? result.chapter.paragraphs : null,
+    source_fragment_ids: current.map(f => f.id),
+    error: result.ok ? null : result.error
   }, { onConflict: 'room_id,round', ignoreDuplicates: true })
 
   const next = advance(toGameState(room), toSettings(room), 0, Date.now())
   await db.from('rooms').update(stateUpdate(next)).eq('id', room.id).eq('status', 'merging').eq('current_round', room.current_round)
+}
+
+/** If a merge got stuck (e.g. the server restarted mid-call), finish the round without AI. */
+export const MERGE_STUCK_MS = 45_000
+export async function recoverStuckMerge(room: RoomRow): Promise<boolean> {
+  if (room.status !== 'merging' || Date.now() - Date.parse(room.updated_at) < MERGE_STUCK_MS) return false
+  await mergeChapter(room, { skipAi: true })
+  return true
 }
 
 /** Host moves from `reveal` to the next round (or the end). */

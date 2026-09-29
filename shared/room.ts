@@ -42,6 +42,7 @@ export interface ChapterRow {
   round: number
   text: string | null
   source_fragment_ids: string[]
+  paragraphs: { text: string, fragmentIds: string[] }[] | null
   error: string | null
   created_at: string
 }

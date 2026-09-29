@@ -28,6 +28,6 @@ export default defineEventHandler(async (event) => {
 
   // Notify everyone (progress), then close early if this was the last writer.
   await db.from('rooms').update({ updated_at: new Date().toISOString() }).eq('id', room.id)
-  const closed = await tryClosePhase({ ...room })
+  const closed = await tryClosePhase(room, Date.now(), task => event.waitUntil(task))
   return { submitted: true, closed }
 })
