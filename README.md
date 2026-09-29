@@ -119,13 +119,22 @@ Run `pnpm test` before every push. Nothing else is automated. Everything else (r
 
 ## Setup
 
-_Coming soon; this will be filled in during the hackathon._
+Requirements: Node 22+ (`nvm use`), pnpm 10, and Docker for local Supabase.
 
 ```bash
 pnpm install
-cp .env.example .env   # SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY (server only), AI API key
-pnpm dev
+pnpm db:start          # starts local Supabase in Docker and prints the URL and keys
+cp .env.example .env   # fill in: API URL, anon key, service_role key, NUXT_ANTHROPIC_API_KEY
+pnpm dev               # http://localhost:3000
 ```
+
+| Command | What it does |
+| --- | --- |
+| `pnpm test` | Unit tests (Vitest) |
+| `pnpm lint` / `pnpm typecheck` | ESLint / vue-tsc |
+| `pnpm db:reset` | Recreates the local database from `supabase/migrations` |
+
+CI (GitHub Actions) will run lint, typecheck and tests on every PR (workflow file pending).
 
 ## AI usage
 
