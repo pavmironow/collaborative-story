@@ -1,0 +1,9 @@
+# Netlify: Nuxt (Nitro "netlify" preset) — static assets in dist/, server routes as a Function.
+# Set the runtime env vars in the Netlify UI / CLI (see .env.example); never commit them.
+[build]
+  command = "pnpm run build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+  NITRO_PRESET = "netlify"
