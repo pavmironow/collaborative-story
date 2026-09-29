@@ -7,6 +7,32 @@ defineProps<{ story: Story }>()
 
 <template>
   <article class="space-y-8">
+    <figure
+      v-if="story.coverUrl"
+      class="-mx-4 overflow-hidden sm:mx-0 sm:rounded-xl"
+    >
+      <img
+        :src="story.coverUrl"
+        :alt="`AI illustration for “${story.theme}”`"
+        width="1536"
+        height="1024"
+        class="aspect-[3/2] w-full object-cover"
+      >
+    </figure>
+    <div
+      v-else-if="story.coverPending"
+      class="-mx-4 flex aspect-[3/2] items-center justify-center bg-elevated sm:mx-0 sm:rounded-xl"
+      role="status"
+    >
+      <p class="flex items-center gap-2 text-muted">
+        <UIcon
+          name="i-lucide-palette"
+          class="size-5 animate-pulse"
+        />
+        Painting the cover…
+      </p>
+    </div>
+
     <header>
       <p class="text-sm font-medium text-primary">
         {{ getGenre(story.genre).emoji }} {{ getGenre(story.genre).label }} · a story written together

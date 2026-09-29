@@ -22,6 +22,8 @@ export default defineNuxtConfig({
     openaiBaseUrl: '',
     /** Total time for the AI merge incl. one retry; keep under the host's function timeout. */
     mergeBudgetMs: 20000,
+    /** Time allowed for the cover image request; keep under the host's function timeout. */
+    coverBudgetMs: 25000,
     public: {
       supabaseUrl: '',
       supabaseAnonKey: ''

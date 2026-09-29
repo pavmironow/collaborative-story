@@ -34,7 +34,9 @@ describe('🧪 the finished story credits its authors (buildStory)', () => {
   })
 
   it('never includes skipped turns as text', () => {
-    expect(JSON.stringify(story)).not.toContain('null')
+    const texts = story.chapters.flatMap(c => c.paragraphs.map(p => p.text))
+    expect(texts.every(t => typeof t === 'string' && t.length > 0)).toBe(true)
+    expect(texts).toHaveLength(4) // round 1: 2 AI paragraphs; round 2: 2 original parts (the skipped turn adds nothing)
   })
 
   it('omits a round in which nobody wrote', () => {

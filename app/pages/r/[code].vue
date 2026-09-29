@@ -120,6 +120,10 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
           title="The story is finished!"
           description="Share the link so anyone can read it, even without joining."
         />
+        <RoomCoverRequest
+          v-if="story?.coverPending"
+          :code="room.code"
+        />
         <StoryView :story="story!" />
         <div class="space-y-3">
           <StoryShareButton

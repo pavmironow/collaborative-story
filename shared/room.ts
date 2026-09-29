@@ -19,6 +19,9 @@ export interface RoomRow {
   created_at: string
   updated_at: string
   merge_started_at: string | null
+  cover_url: string | null
+  cover_started_at: string | null
+  cover_error: string | null
 }
 
 export interface PlayerRow {
