@@ -91,19 +91,10 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
         @submitted="refresh"
       />
 
-      <div
+      <RoomMerging
         v-else-if="room.status === 'merging'"
-        class="py-24 text-center"
-        role="status"
-      >
-        <UIcon
-          name="i-lucide-sparkles"
-          class="size-8 animate-pulse text-primary"
-        />
-        <p class="mt-3 text-lg font-semibold">
-          Weaving everyone’s ideas into chapter {{ room.current_round }}…
-        </p>
-      </div>
+        :room="room"
+      />
 
       <RoomChaosReveal
         v-else-if="room.status === 'reveal'"

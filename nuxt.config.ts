@@ -14,6 +14,9 @@ export default defineNuxtConfig({
   runtimeConfig: {
     supabaseServiceRoleKey: '',
     anthropicApiKey: '',
+    anthropicModel: 'claude-opus-5-5',
+    /** Optional: point the SDK at another endpoint (e.g. a proxy). */
+    anthropicBaseUrl: '',
     public: {
       supabaseUrl: '',
       supabaseAnonKey: ''

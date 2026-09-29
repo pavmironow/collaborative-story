@@ -6,6 +6,10 @@ const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: Frag
 const round = computed(() => props.room.current_round)
 const chapter = computed(() => props.chapters.find(c => c.round === round.value))
 const names = computed(() => new Map(props.players.map(p => [p.user_id, p.name])))
+const authorOf = computed(() => new Map(props.fragments.map(f => [f.id, names.value.get(f.player_id) ?? '?'])))
+const paragraphs = computed(() => chapter.value?.paragraphs?.length
+  ? chapter.value.paragraphs.map(p => ({ text: p.text, from: p.fragmentIds.map(id => authorOf.value.get(id)).filter(Boolean).join(', ') }))
+  : chapter.value?.text ? [{ text: chapter.value.text, from: '' }] : [])
 const parts = computed(() => props.fragments.filter(f => f.round === round.value && f.status === 'submitted'))
 const skippedNames = computed(() => props.fragments.filter(f => f.round === round.value && f.status === 'skipped').map(f => names.value.get(f.player_id)))
 const last = computed(() => round.value >= props.room.rounds_total)
@@ -38,13 +42,27 @@ async function next() {
     </div>
 
     <section
-      v-if="chapter?.text"
+      v-if="paragraphs.length"
       aria-label="Chapter"
-      class="rounded-lg border border-primary/30 bg-primary/5 p-4"
+      class="space-y-4 rounded-lg border border-primary/30 bg-primary/5 p-4"
     >
-      <p class="text-lg leading-relaxed whitespace-pre-line">
-        {{ chapter.text }}
+      <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
+        <UIcon name="i-lucide-sparkles" /> Woven by AI from everyone’s parts
       </p>
+      <div
+        v-for="(p, i) in paragraphs"
+        :key="i"
+      >
+        <p class="text-lg leading-relaxed">
+          {{ p.text }}
+        </p>
+        <p
+          v-if="p.from"
+          class="mt-1 text-xs text-muted"
+        >
+          from {{ p.from }}
+        </p>
+      </div>
     </section>
     <UAlert
       v-else-if="parts.length"
@@ -60,7 +78,7 @@ async function next() {
         id="originals"
         class="font-semibold"
       >
-        {{ chapter?.text ? 'What everyone wrote' : 'The parts' }}
+        {{ paragraphs.length ? 'What everyone wrote' : 'The parts' }}
       </h2>
       <ul class="mt-2 space-y-3">
         <li
