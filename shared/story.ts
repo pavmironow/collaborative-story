@@ -22,6 +22,10 @@ export interface Story {
   authors: { name: string, contributions: number }[]
   chapters: StoryChapter[]
   finished: boolean
+  /** AI cover illustration, when one was generated. */
+  coverUrl: string | null
+  /** True while a cover may still appear (not generated and not failed). */
+  coverPending: boolean
 }
 
 export function buildStory(room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[]): Story {
@@ -58,6 +62,8 @@ export function buildStory(room: RoomRow, players: PlayerRow[], fragments: Fragm
     genre: room.genre,
     authors: seats.map(p => ({ name: p.name, contributions: counts.get(p.user_id) ?? 0 })),
     chapters: out,
-    finished: room.status === 'finished'
+    finished: room.status === 'finished',
+    coverUrl: room.cover_url ?? null,
+    coverPending: room.status === 'finished' && !room.cover_url && !room.cover_error
   }
 }
