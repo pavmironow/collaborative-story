@@ -2,7 +2,12 @@
 import type { Story } from '#shared/story'
 import { getGenre } from '#shared/genres'
 
-defineProps<{ story: Story }>()
+const props = defineProps<{ story: Story }>()
+
+// AI-improved themes can be 2–3 sentences: keep them readable as a title on a phone.
+const titleClass = computed(() => props.story.theme.length > 120
+  ? 'text-xl sm:text-2xl'
+  : props.story.theme.length > 60 ? 'text-2xl sm:text-3xl' : 'text-3xl sm:text-4xl')
 </script>
 
 <template>
@@ -37,7 +42,10 @@ defineProps<{ story: Story }>()
       <p class="text-sm font-medium text-primary">
         {{ getGenre(story.genre).emoji }} {{ getGenre(story.genre).label }} · a story written together
       </p>
-      <h1 class="mt-1 font-serif text-3xl leading-tight font-bold text-balance sm:text-4xl">
+      <h1
+        class="mt-1 font-serif leading-tight font-bold text-balance"
+        :class="titleClass"
+      >
         {{ story.theme }}
       </h1>
       <p class="mt-3 text-muted">
