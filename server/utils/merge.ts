@@ -1,29 +1,18 @@
-import Anthropic from '@anthropic-ai/sdk'
-import { zodOutputFormat } from '@anthropic-ai/sdk/helpers/zod'
+import { zodTextFormat } from 'openai/helpers/zod'
 import { buildMergeUserMessage, checkMerge, MERGE_SYSTEM_PROMPT, mergeOutputSchema, type MergedChapter, type MergeInput } from '#shared/merge'
-
-let client: Anthropic | undefined
-
-function anthropic(): Anthropic | null {
-  const { anthropicApiKey, anthropicBaseUrl } = useRuntimeConfig()
-  if (!anthropicApiKey) return null
-  // Retries are handled below within one time budget, so a merge fits in a serverless request.
-  client ??= new Anthropic({ apiKey: anthropicApiKey, baseURL: anthropicBaseUrl || undefined, maxRetries: 0 })
-  return client
-}
 
 export type ChapterResult = { ok: true, chapter: MergedChapter } | { ok: false, error: string }
 
 /**
- * Asks Claude to weave one round's fragments into a chapter. Output is structured (paragraphs
- * citing fragment labels) and must pass checkMerge (every fragment used) or it is retried once.
- * Never throws: on any failure the caller falls back to showing the original fragments.
+ * Asks the model to weave one round's fragments into a chapter. Output is structured (paragraphs
+ * citing fragment labels) and must pass checkMerge (every fragment used) or it is retried once,
+ * all within one time budget. Never throws: on any failure the caller shows the original fragments.
  */
 export async function generateChapter(input: MergeInput): Promise<ChapterResult> {
   if (!input.fragments.length) return { ok: false, error: 'no_fragments' }
-  const api = anthropic()
+  const api = useOpenAI()
   if (!api) return { ok: false, error: 'no_api_key' }
-  const { anthropicModel, mergeBudgetMs } = useRuntimeConfig()
+  const { openaiTextModel, mergeBudgetMs } = useRuntimeConfig()
   const deadline = Date.now() + Number(mergeBudgetMs)
 
   let error = 'unknown'
@@ -34,33 +23,30 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
       break
     }
     try {
-      const response = await api.beta.messages.parse({
-        model: anthropicModel,
-        max_tokens: 8000,
-        // On a safety decline, the API re-runs the request on a suitable fallback model.
-        betas: ['server-side-fallback-2026-07-01'],
-        fallbacks: 'default',
-        output_config: { effort: 'low', format: zodOutputFormat(mergeOutputSchema) },
-        system: MERGE_SYSTEM_PROMPT,
-        messages: [{ role: 'user', content: buildMergeUserMessage(input) }]
+      const response = await api.responses.parse({
+        model: openaiTextModel,
+        instructions: MERGE_SYSTEM_PROMPT,
+        input: buildMergeUserMessage(input),
+        text: { format: zodTextFormat(mergeOutputSchema, 'chapter') },
+        reasoning: { effort: 'low' },
+        max_output_tokens: 6000
       }, { timeout: remaining })
-      if (response.stop_reason === 'refusal') {
+
+      const refused = response.output.some(item => item.type === 'message' && item.content.some(c => c.type === 'refusal'))
+      if (refused) {
         error = 'refused'
         continue
       }
-      if (!response.parsed_output) {
-        error = response.stop_reason === 'max_tokens' ? 'too_long' : 'unparseable'
+      if (!response.output_parsed) {
+        error = response.status === 'incomplete' ? 'too_long' : 'unparseable'
         continue
       }
-      const check = checkMerge(response.parsed_output, input.fragments)
+      const check = checkMerge(response.output_parsed, input.fragments)
       if (check.ok) return check
       error = check.reason
     } catch (e) {
-      if (e instanceof Anthropic.AuthenticationError || e instanceof Anthropic.PermissionDeniedError) return { ok: false, error: 'auth' }
-      if (e instanceof Anthropic.BadRequestError || e instanceof Anthropic.NotFoundError) return { ok: false, error: `api_${e.status}` }
-      error = e instanceof Anthropic.APIConnectionTimeoutError
-        ? 'timeout'
-        : e instanceof Anthropic.APIError ? `api_${e.status ?? 'connection'}` : 'error'
+      error = openaiErrorCode(e)
+      if (isPermanent(e)) break
     }
   }
   console.warn(`[merge] falling back to original fragments: ${error}`)

@@ -2,6 +2,7 @@
 import { LIMITS, formatDuration } from '#shared/game'
 import type { PlayerRow, RoomRow } from '#shared/room'
 import { MODE_LABELS } from '#shared/room'
+import { getGenre } from '#shared/genres'
 
 const props = defineProps<{ room: RoomRow, players: PlayerRow[], online: Set<string>, userId: string, isHost: boolean }>()
 
@@ -31,7 +32,9 @@ async function start() {
 const rules = computed(() => {
   const r = props.room
   const time = formatDuration(r.time_limit_s)
+  const genre = getGenre(r.genre)
   return [
+    { icon: 'i-lucide-drama', text: `Genre: ${genre.emoji} ${genre.label}` },
     { icon: 'i-lucide-shuffle', text: MODE_LABELS[r.mode].description },
     { icon: 'i-lucide-repeat', text: `${r.rounds_total} rounds. Everyone writes once per round.` },
     { icon: 'i-lucide-timer', text: r.mode === 'chaos' ? `${time} per round.` : `${time} per turn.` },

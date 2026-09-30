@@ -2,13 +2,24 @@
 import type { Story } from '#shared/story'
 
 const code = (useRoute().params.code as string).toUpperCase()
-const { data: story, error } = await useFetch<Story>(`/api/stories/${code}`)
+const { data: story, error, refresh } = await useFetch<Story>(`/api/stories/${code}`)
+
+// The cover is painted by the writers' devices after the story ends: check back for a while.
+let poll: ReturnType<typeof setInterval> | undefined
+onMounted(() => {
+  const started = Date.now()
+  poll = setInterval(() => {
+    if (!story.value?.coverPending || Date.now() - started > 120_000) return clearInterval(poll)
+    refresh()
+  }, 4000)
+})
+onBeforeUnmount(() => clearInterval(poll))
 
 const title = computed(() => story.value ? story.value.theme : 'Collaborative Story')
 const description = computed(() => story.value
   ? `A story written together by ${story.value.authors.map(a => a.name).join(', ')}.`
   : 'Write a story together with friends in short, timed rounds.')
-useSeoMeta({ title, ogTitle: title, description, ogDescription: description })
+useSeoMeta({ title, ogTitle: title, description, ogDescription: description, ogImage: () => story.value?.coverUrl ?? undefined })
 </script>
 
 <template>
