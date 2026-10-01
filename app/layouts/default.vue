@@ -11,12 +11,13 @@ const items = computed<NavigationMenuItem[]>(() => [
 <template>
   <div>
     <UHeader
+      title="Collaborative Story"
       mode="drawer"
       :toggle="{ color: 'neutral', variant: 'ghost' }"
       class="border-b-2 border-(--ink)"
     >
       <template #title>
-        <SiteLogo />
+        <SiteLogo :link="false" />
       </template>
 
       <UNavigationMenu
