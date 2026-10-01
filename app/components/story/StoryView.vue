@@ -117,7 +117,7 @@ const titleClass = computed(() => props.story.theme.length > 120
         v-else-if="story.mode === 'open'"
         class="mt-3 text-xs text-muted"
       >
-        Open story: the writers added their parts one after another, whenever they liked.
+        Endless story: the writers added their parts one after another, whenever they liked.
       </p>
     </footer>
   </article>

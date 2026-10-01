@@ -17,16 +17,17 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 422, statusMessage: 'Invalid settings', data: z.flattenError(parsed.error).fieldErrors })
   }
-  const { hostName, theme, mode, genre, charLimit, timeLimitS, endless, isPublic } = parsed.data
+  const { hostName, theme, mode, genre, charLimit, timeLimitS, isPublic } = parsed.data
   const db = useSupabaseAdmin()
-  // An open story has no lobby and no rounds: it is endless and open for writing from the start.
+  // The endless story (mode `open`) has no lobby and no rounds: it is open for writing from the
+  // start until the host wraps it up. Chaos Mode always has a fixed number of rounds.
   const open = mode === 'open'
   const opening = open ? { status: 'writing', current_round: 1, started_at: new Date().toISOString() } : {}
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: room, error } = await db.from('rooms').insert({
       code: generateCode(), host_id: userId, theme, mode, genre: resolveGenre(genre),
-      rounds_total: roundsToStore({ ...parsed.data, endless: endless || open }), endless: endless || open,
+      rounds_total: roundsToStore({ ...parsed.data, endless: open }), endless: open,
       is_public: isPublic, char_limit: charLimit, time_limit_s: timeLimitS, ...opening
     }).select('id, code').single()
 

@@ -9,7 +9,7 @@ const sections = [
     title: 'Start a room',
     body: [
       'The host picks a genre and a theme: the opening idea everyone writes from. The AI helper can turn a rough idea into a premise.',
-      `Share the link or the 5-letter room code. ${LIMITS.players.min} to ${LIMITS.players.max} writers can join while the room is in the lobby. Once the host starts, the writers and the rules are locked.`
+      `Share the link or the 5-letter room code. ${LIMITS.players.min} to ${LIMITS.players.max} writers can join while the room is in the lobby. Once the host starts, the writers and the rules are locked (an endless story takes new writers at any time).`
     ]
   },
   {
@@ -30,26 +30,19 @@ const sections = [
     ]
   },
   {
-    icon: 'i-lucide-scroll-text',
-    title: 'Open story',
+    icon: 'i-lucide-infinity',
+    title: 'Endless story',
     body: [
-      'No rounds and no timer. Anyone with the link can join at any time and add a part; everyone sees it straight away. You can write again once someone else has added a part.',
-      'The host ends a chapter after any part, and the AI may suggest a good place. The host can also remove a part that does not belong, and ends the story when it feels done.'
+      'A story that keeps growing until the host wraps it up. No rounds and no timer: anyone with the link can join at any time, read what is there and add the next part. Everyone sees it straight away, and you can write again once someone else has added a part.',
+      'The host ends a chapter after any part, and the AI may suggest a good place. The host can also remove a part that does not belong.'
     ]
   },
   {
     icon: 'i-lucide-timer',
     title: 'Rounds, timer and skips',
     body: [
-      `A story has ${LIMITS.rounds.min} to ${LIMITS.rounds.max} rounds. Each part has a character limit; longer text is never cut, you are asked to shorten it.`,
+      `A Chaos game has ${LIMITS.rounds.min} to ${LIMITS.rounds.max} rounds. Each part has a character limit; longer text is never cut, you are asked to shorten it.`,
       'Miss the timer and your part for that round is skipped. Nobody writes for you, and you play the next round as usual.'
-    ]
-  },
-  {
-    icon: 'i-lucide-infinity',
-    title: 'Endless stories',
-    body: [
-      `In an endless room the rounds keep coming until the host presses “End story” between rounds (at most ${LIMITS.endlessRounds} rounds).`
     ]
   },
   {
