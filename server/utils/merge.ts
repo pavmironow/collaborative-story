@@ -1,5 +1,6 @@
 import { zodTextFormat } from 'openai/helpers/zod'
 import { buildMergeUserMessage, checkMerge, MERGE_SYSTEM_PROMPT, mergeOutputSchema, type MergedChapter, type MergeInput } from '#shared/merge'
+import { buildReviseUserMessage, REVISE_SYSTEM_PROMPT, type ReviseInput } from '#shared/revision'
 
 export type ChapterResult = { ok: true, chapter: MergedChapter } | { ok: false, error: string }
 
@@ -9,7 +10,23 @@ export type ChapterResult = { ok: true, chapter: MergedChapter } | { ok: false, 
  * all within one time budget. Never throws: on any failure the caller shows the original fragments.
  */
 export async function generateChapter(input: MergeInput): Promise<ChapterResult> {
-  if (!input.fragments.length) return { ok: false, error: 'no_fragments' }
+  const result = await runChapterModel(MERGE_SYSTEM_PROMPT, buildMergeUserMessage(input), input.fragments)
+  if (!result.ok) console.warn(`[merge] falling back to original fragments: ${result.error}`)
+  return result
+}
+
+/**
+ * Rewrites a revealed chapter following the host's request, under the same rules as the merge
+ * (every fragment still used). Never throws: on failure the chapter keeps its current version.
+ */
+export async function reviseChapterWithAi(input: ReviseInput): Promise<ChapterResult> {
+  const result = await runChapterModel(REVISE_SYSTEM_PROMPT, buildReviseUserMessage(input), input.fragments)
+  if (!result.ok) console.warn(`[revise] chapter kept as it was: ${result.error}`)
+  return result
+}
+
+async function runChapterModel(instructions: string, message: string, fragments: MergeInput['fragments']): Promise<ChapterResult> {
+  if (!fragments.length) return { ok: false, error: 'no_fragments' }
   const api = useOpenAI()
   if (!api) return { ok: false, error: 'no_api_key' }
   const { openaiTextModel, mergeBudgetMs } = useRuntimeConfig()
@@ -25,8 +42,8 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
     try {
       const response = await api.responses.parse({
         model: openaiTextModel,
-        instructions: MERGE_SYSTEM_PROMPT,
-        input: buildMergeUserMessage(input),
+        instructions,
+        input: message,
         text: { format: zodTextFormat(mergeOutputSchema, 'chapter') },
         reasoning: { effort: 'low' },
         max_output_tokens: 6000
@@ -41,7 +58,7 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
         error = response.status === 'incomplete' ? 'too_long' : 'unparseable'
         continue
       }
-      const check = checkMerge(response.output_parsed, input.fragments)
+      const check = checkMerge(response.output_parsed, fragments)
       if (check.ok) return check
       error = check.reason
     } catch (e) {
@@ -49,6 +66,5 @@ export async function generateChapter(input: MergeInput): Promise<ChapterResult>
       if (isPermanent(e)) break
     }
   }
-  console.warn(`[merge] falling back to original fragments: ${error}`)
   return { ok: false, error }
 }

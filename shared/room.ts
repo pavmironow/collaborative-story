@@ -54,6 +54,22 @@ export interface ChapterRow {
   paragraphs: { text: string, fragmentIds: string[] }[] | null
   error: string | null
   created_at: string
+  /** Current version in chapter_versions; 0 while there is no text (failed merge, not yet edited). */
+  version: number
+}
+
+/** One saved text of a chapter. Rows are only ever added; the chapter row holds the current one. */
+export interface ChapterVersionRow {
+  room_id: string
+  round: number
+  version: number
+  kind: 'merge' | 'ai_edit' | 'manual' | 'restore'
+  text: string
+  paragraphs: ChapterRow['paragraphs']
+  instruction: string | null
+  restored_from: number | null
+  created_by: string | null
+  created_at: string
 }
 
 export function toGameState(room: RoomRow): GameState {

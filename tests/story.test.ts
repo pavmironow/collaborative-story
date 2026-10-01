@@ -14,9 +14,9 @@ const fragments = [
   frag('f1', 1, 'a', 'No face.'), frag('f2', 1, 'b', 'A suitcase.'), frag('f3', 1, 'c', 'No street.'),
   frag('f4', 2, 'b', 'Brakes.'), frag('f5', 2, 'a', null, 'skipped'), frag('f6', 2, 'c', 'A map.')
 ]
-const aiChapter: ChapterRow = { room_id: 'r', round: 1, text: 'P1\n\nP2', source_fragment_ids: ['f1', 'f2', 'f3'], error: null, created_at: '',
+const aiChapter: ChapterRow = { room_id: 'r', round: 1, text: 'P1\n\nP2', source_fragment_ids: ['f1', 'f2', 'f3'], error: null, created_at: '', version: 1,
   paragraphs: [{ text: 'P1', fragmentIds: ['f3', 'f1'] }, { text: 'P2', fragmentIds: ['f2'] }] }
-const failedChapter: ChapterRow = { room_id: 'r', round: 2, text: null, paragraphs: null, source_fragment_ids: ['f4', 'f6'], error: 'no_api_key', created_at: '' }
+const failedChapter: ChapterRow = { room_id: 'r', round: 2, text: null, paragraphs: null, source_fragment_ids: ['f4', 'f6'], error: 'no_api_key', created_at: '', version: 0 }
 
 describe('🧪 the finished story credits its authors (buildStory)', () => {
   const story = buildStory(room, players, fragments, [aiChapter, failedChapter])
@@ -60,5 +60,12 @@ describe('an endless story ended by the host', () => {
   it('shows the rounds played, not the 50-round cap', () => {
     const ended = { ...room, endless: true, rounds_total: 50, current_round: 1 } as RoomRow
     expect(buildStory(ended, players, fragments, [aiChapter, failedChapter]).chapters.map(c => c.round)).toEqual([1])
+  })
+})
+
+describe('🧪 a chapter edited by the host', () => {
+  it('shows the edited text, crediting everyone who wrote in that round', () => {
+    const edited: ChapterRow = { ...failedChapter, text: 'Fixed.', version: 1, paragraphs: [{ text: 'Fixed.', fragmentIds: ['f4', 'f6'] }] }
+    expect(buildStory(room, players, fragments, [aiChapter, edited]).chapters[1]).toEqual({ round: 2, woven: true, paragraphs: [{ text: 'Fixed.', by: ['Ben', 'Cid'] }] })
   })
 })
