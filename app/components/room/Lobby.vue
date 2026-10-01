@@ -35,6 +35,9 @@ const rules = computed(() => {
   const genre = getGenre(r.genre)
   return [
     { icon: 'i-lucide-drama', text: `Genre: ${genre.emoji} ${genre.label}` },
+    r.is_public
+      ? { icon: 'i-lucide-door-open', text: 'Public room: listed on the homepage until the story starts.' }
+      : { icon: 'i-lucide-lock', text: 'Private room: only people with the link or code can join.' },
     { icon: 'i-lucide-shuffle', text: MODE_LABELS[r.mode].description },
     r.endless
       ? { icon: 'i-lucide-infinity', text: 'Endless. Rounds keep going until the host ends the story. Everyone writes once per round.' }

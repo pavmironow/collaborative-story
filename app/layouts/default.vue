@@ -3,6 +3,8 @@ import type { NavigationMenuItem } from '@nuxt/ui'
 
 const route = useRoute()
 const items = computed<NavigationMenuItem[]>(() => [
+  // A section of the homepage, not a page: never shown as the current page.
+  { label: 'Open rooms', to: '/#open-rooms', icon: 'i-lucide-door-open', active: false },
   { label: 'My stories', to: '/stories', icon: 'i-lucide-library', active: route.path.startsWith('/stories') },
   { label: 'How to play', to: '/how-to-play', icon: 'i-lucide-circle-help', active: route.path === '/how-to-play' }
 ])
