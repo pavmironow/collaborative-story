@@ -55,3 +55,10 @@ describe('🧪 the finished story credits its authors (buildStory)', () => {
     expect(s.chapters.map(c => c.round)).toEqual([1])
   })
 })
+
+describe('an endless story ended by the host', () => {
+  it('shows the rounds played, not the 50-round cap', () => {
+    const ended = { ...room, endless: true, rounds_total: 50, current_round: 1 } as RoomRow
+    expect(buildStory(ended, players, fragments, [aiChapter, failedChapter]).chapters.map(c => c.round)).toEqual([1])
+  })
+})

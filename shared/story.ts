@@ -36,9 +36,9 @@ export function buildStory(room: RoomRow, players: PlayerRow[], fragments: Fragm
   const authorOfFragment = new Map(submitted.map(f => [f.id, f.player_id]))
   const bySeat = (ids: string[]) => [...new Set(ids)].sort((a, b) => (seatOf.get(a) ?? 0) - (seatOf.get(b) ?? 0)).map(id => nameOf.get(id) ?? 'Someone')
 
-  const lastRound = room.status === 'finished' ? room.rounds_total : room.current_round
   const out: StoryChapter[] = []
-  for (let round = 1; round <= lastRound; round++) {
+  // current_round is the last round played, also once finished (an endless story may end early).
+  for (let round = 1; round <= room.current_round; round++) {
     const parts = submitted.filter(f => f.round === round)
     const chapter = chapters.find(c => c.round === round)
     if (chapter?.text && chapter.paragraphs?.length) {
