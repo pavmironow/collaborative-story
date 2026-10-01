@@ -10,6 +10,7 @@ const props = defineProps<{
   chapters: ChapterRow[]
   submitters: Set<string>
   userId: string
+  isHost: boolean
   clockOffset: number
 }>()
 const emit = defineEmits<{ submitted: [] }>()
@@ -96,6 +97,8 @@ onBeforeUnmount(() => clearInterval(closer))
       :fragments="fragments"
       :players="players"
       :before-round="room.current_round"
+      :room="room"
+      :is-host="isHost"
     />
 
     <section

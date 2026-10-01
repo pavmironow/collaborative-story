@@ -64,6 +64,10 @@ const titleClass = computed(() => props.story.theme.length > 120
       >
         Chapter {{ chapter.round }}
       </h2>
+      <slot
+        name="chapter"
+        :round="chapter.round"
+      />
       <div class="mt-3 space-y-5">
         <div
           v-for="(p, i) in chapter.paragraphs"

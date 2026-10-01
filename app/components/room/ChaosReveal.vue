@@ -48,6 +48,14 @@ const waitingFor = computed(() => {
       <h1 class="text-2xl font-bold">
         Chapter {{ round }}
       </h1>
+      <RoomChapterTools
+        v-if="chapter"
+        :room="room"
+        :chapter="chapter"
+        :fragments="fragments"
+        :is-host="isHost"
+        class="mt-1"
+      />
     </div>
 
     <RoomStorySoFar
@@ -58,6 +66,8 @@ const waitingFor = computed(() => {
       :players="players"
       :before-round="round"
       collapsed
+      :room="room"
+      :is-host="isHost"
     />
 
     <section

@@ -46,14 +46,36 @@ export function fragmentLabel(index: number): string {
   return `F${index + 1}`
 }
 
+/** The latest chapters, numbered as in the story, for a prompt's <story_so_far>. */
+export function formatStorySoFar(storySoFar: string[]): string {
+  if (!storySoFar.length) return '(this is the first chapter)'
+  const first = Math.max(0, storySoFar.length - STORY_CONTEXT_CHAPTERS)
+  return storySoFar.slice(first).map((c, i) => `<chapter n="${first + i + 1}">\n${c}\n</chapter>`).join('\n')
+}
+
+/** Fragments labelled F1..Fn, for a prompt's <fragments>. */
+export function formatFragments(fragments: MergeInput['fragments']): string {
+  return fragments.map((f, i) => `<fragment label="${fragmentLabel(i)}">\n${f.text}\n</fragment>`).join('\n')
+}
+
+/**
+ * Text of each chapter before `beforeRound`, oldest first: its current version, or the
+ * round's original fragments when it has none.
+ */
+export function storySoFar(
+  chapters: { round: number, text: string | null }[],
+  fragments: { round: number, text: string | null, status: string }[],
+  beforeRound: number
+): string[] {
+  return Array.from({ length: beforeRound - 1 }, (_, i) => i + 1).map(round =>
+    chapters.find(c => c.round === round)?.text
+    ?? fragments.filter(f => f.round === round && f.status === 'submitted').map(f => f.text).join('\n')
+  ).filter(Boolean) as string[]
+}
+
 export function buildMergeUserMessage(input: MergeInput): string {
-  const first = Math.max(0, input.storySoFar.length - STORY_CONTEXT_CHAPTERS)
-  const sofar = input.storySoFar.length
-    ? input.storySoFar.slice(first).map((c, i) => `<chapter n="${first + i + 1}">\n${c}\n</chapter>`).join('\n')
-    : '(this is the first chapter)'
-  const fragments = input.fragments
-    .map((f, i) => `<fragment label="${fragmentLabel(i)}">\n${f.text}\n</fragment>`)
-    .join('\n')
+  const sofar = formatStorySoFar(input.storySoFar)
+  const fragments = formatFragments(input.fragments)
   const genre = input.genreTone ? `<genre>${input.genreTone}</genre>\n\n` : ''
   return `${genre}<theme>${input.theme}</theme>\n\n<story_so_far>\n${sofar}\n</story_so_far>\n\n<fragments>\n${fragments}\n</fragments>\n\nWrite the next chapter from these ${input.fragments.length} fragments.`
 }

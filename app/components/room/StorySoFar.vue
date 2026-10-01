@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import type { ChapterRow, FragmentRow, PlayerRow } from '#shared/room'
+import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
 
 /** The accepted story up to (not including) `beforeRound`: AI chapters where they exist, otherwise the original fragments. */
-const props = defineProps<{ theme: string, chapters: ChapterRow[], fragments: FragmentRow[], players: PlayerRow[], beforeRound: number, collapsed?: boolean }>()
+const props = defineProps<{ theme: string, chapters: ChapterRow[], fragments: FragmentRow[], players: PlayerRow[], beforeRound: number, collapsed?: boolean, room?: RoomRow, isHost?: boolean }>()
 
 /** Long (endless) stories show only the latest chapters until the reader asks for all of them. */
 const RECENT = 2
@@ -11,7 +11,7 @@ const names = computed(() => new Map(props.players.map(p => [p.user_id, p.name])
 const rounds = computed(() => Array.from({ length: Math.max(0, props.beforeRound - 1) }, (_, i) => i + 1).map((round) => {
   const chapter = props.chapters.find(c => c.round === round)
   const parts = props.fragments.filter(f => f.round === round && f.status === 'submitted')
-  return { round, text: chapter?.text ?? null, parts }
+  return { round, text: chapter?.text ?? null, chapter, parts }
 }))
 const open = ref(!props.collapsed)
 const showAll = ref(false)
@@ -71,6 +71,14 @@ const heading = computed(() => {
         <h3 class="text-xs font-semibold tracking-wide text-muted uppercase">
           Chapter {{ r.round }}
         </h3>
+        <RoomChapterTools
+          v-if="room && r.chapter"
+          :room="room"
+          :chapter="r.chapter"
+          :fragments="fragments"
+          :is-host="!!isHost"
+          class="mt-1"
+        />
         <p
           v-if="r.text"
           class="mt-1 whitespace-pre-line"

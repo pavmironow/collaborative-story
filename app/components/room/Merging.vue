@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
 
-const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[] }>()
+const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[], isHost: boolean }>()
 
 // Every client asks the server to run the merge; exactly one request runs it (the others get
 // "busy"). Asking again every few seconds lets a later request take over if that one died.
@@ -38,6 +38,8 @@ onBeforeUnmount(() => clearInterval(timer))
       :players="players"
       :before-round="room.current_round"
       collapsed
+      :room="room"
+      :is-host="isHost"
     />
   </div>
 </template>

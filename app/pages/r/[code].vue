@@ -4,6 +4,7 @@ import { buildStory } from '#shared/story'
 const code = (useRoute().params.code as string).toUpperCase()
 const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, networkOnline, refresh } = useRoom(code)
 const story = computed(() => room.value ? buildStory(room.value, players.value, fragments.value, chapters.value) : null)
+const chapterOf = (round: number) => chapters.value.find(c => c.round === round)
 const hostName = computed(() => players.value.find(p => p.user_id === room.value?.host_id)?.name ?? 'Someone')
 
 useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collaborative Story` : 'Collaborative Story') })
@@ -92,6 +93,7 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
         :submitters="submitters"
         :user-id="userId!"
         :clock-offset="clockOffset"
+        :is-host="isHost"
         @submitted="refresh"
       />
 
@@ -101,6 +103,7 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
         :players="players"
         :fragments="fragments"
         :chapters="chapters"
+        :is-host="isHost"
       />
 
       <RoomChaosReveal
@@ -127,7 +130,18 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
           v-if="story?.coverPending"
           :code="room.code"
         />
-        <StoryView :story="story!" />
+        <StoryView :story="story!">
+          <template #chapter="{ round }">
+            <RoomChapterTools
+              v-if="chapterOf(round)"
+              :room="room"
+              :chapter="chapterOf(round)!"
+              :fragments="fragments"
+              :is-host="isHost"
+              class="mt-1"
+            />
+          </template>
+        </StoryView>
         <div class="space-y-3">
           <StoryShareButton
             :code="room.code"

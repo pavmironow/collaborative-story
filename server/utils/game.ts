@@ -2,6 +2,7 @@ import { advance, canClose, skipped, SUBMIT_GRACE_MS, turnOrder } from '#shared/
 import type { PlayerRow, RoomRow } from '#shared/room'
 import { toGameState, toSettings } from '#shared/room'
 import { getGenre } from '#shared/genres'
+import { storySoFar } from '#shared/merge'
 
 /** Who must write in the current phase: everyone in Chaos Mode, the current writer otherwise. */
 export function expectedWriters(room: RoomRow, players: PlayerRow[]): string[] {
@@ -77,14 +78,11 @@ export async function mergeChapter(room: RoomRow, options: { skipAi?: boolean } 
   ])
   const submitted = (fragments ?? []).filter(f => f.status === 'submitted')
   const current = submitted.filter(f => f.round === room.current_round).map(f => ({ id: f.id as string, text: f.text as string }))
-  const storySoFar = Array.from({ length: room.current_round - 1 }, (_, i) => i + 1).map(round =>
-    previous?.find(c => c.round === round)?.text
-    ?? submitted.filter(f => f.round === round).map(f => f.text).join('\n')
-  ).filter(Boolean) as string[]
+  const sofar = storySoFar(previous ?? [], submitted, room.current_round)
 
   const result = options.skipAi
     ? { ok: false as const, error: 'timeout' }
-    : await generateChapter({ theme: room.theme, genreTone: getGenre(room.genre).tone, storySoFar, fragments: current })
+    : await generateChapter({ theme: room.theme, genreTone: getGenre(room.genre).tone, storySoFar: sofar, fragments: current })
 
   await db.from('chapters').upsert({
     room_id: room.id,
@@ -92,7 +90,9 @@ export async function mergeChapter(room: RoomRow, options: { skipAi?: boolean } 
     text: result.ok ? result.chapter.text : null,
     paragraphs: result.ok ? result.chapter.paragraphs : null,
     source_fragment_ids: current.map(f => f.id),
-    error: result.ok ? null : result.error
+    error: result.ok ? null : result.error,
+    // Version 1 is recorded in chapter_versions by the chapters_first_version trigger.
+    version: result.ok ? 1 : 0
   }, { onConflict: 'room_id,round', ignoreDuplicates: true })
 
   const next = advance(toGameState(room), toSettings(room), 0, Date.now())
