@@ -43,7 +43,7 @@ const titleClass = computed(() => props.story.theme.length > 120
         {{ getGenre(story.genre).emoji }} {{ getGenre(story.genre).label }} · a story written together
       </p>
       <h1
-        class="mt-1 font-serif leading-tight font-bold text-balance"
+        class="mt-1 font-display leading-tight font-bold text-balance"
         :class="titleClass"
       >
         {{ story.theme }}
@@ -73,7 +73,7 @@ const titleClass = computed(() => props.story.theme.length > 120
           v-for="(p, i) in chapter.paragraphs"
           :key="i"
         >
-          <p class="font-serif text-lg leading-relaxed sm:text-xl">
+          <p class="text-lg leading-relaxed sm:text-xl">
             {{ p.text }}
           </p>
           <p class="mt-1 text-xs text-muted">
