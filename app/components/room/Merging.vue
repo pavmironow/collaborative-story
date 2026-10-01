@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import type { RoomRow } from '#shared/room'
+import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
 
-const props = defineProps<{ room: RoomRow }>()
+const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[] }>()
 
 // Every client asks the server to run the merge; exactly one request runs it (the others get
 // "busy"). Asking again every few seconds lets a later request take over if that one died.
@@ -15,19 +15,29 @@ onBeforeUnmount(() => clearInterval(timer))
 </script>
 
 <template>
-  <div
-    class="py-24 text-center"
-    role="status"
-  >
-    <UIcon
-      name="i-lucide-sparkles"
-      class="size-8 animate-pulse text-primary"
+  <div class="space-y-6">
+    <div
+      class="py-16 text-center"
+      role="status"
+    >
+      <UIcon
+        name="i-lucide-sparkles"
+        class="size-8 animate-pulse text-primary"
+      />
+      <p class="mt-3 text-lg font-semibold">
+        Weaving everyone’s ideas into chapter {{ room.current_round }}…
+      </p>
+      <p class="mt-1 text-sm text-muted">
+        This usually takes a few seconds.
+      </p>
+    </div>
+    <RoomStorySoFar
+      :theme="room.theme"
+      :chapters="chapters"
+      :fragments="fragments"
+      :players="players"
+      :before-round="room.current_round"
+      collapsed
     />
-    <p class="mt-3 text-lg font-semibold">
-      Weaving everyone’s ideas into chapter {{ room.current_round }}…
-    </p>
-    <p class="mt-1 text-sm text-muted">
-      This usually takes a few seconds.
-    </p>
   </div>
 </template>

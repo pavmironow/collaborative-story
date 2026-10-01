@@ -1,14 +1,14 @@
 import { describe, expect, it } from 'vitest'
 import {
   LIMITS, LOBBY, advance, formatDuration, canClose, canStart, canTransition, checkFragment, currentWriter,
-  isLocked, settingsSchema, skipped, turnOrder, type GameState, type Mode, type Settings, type Status
+  isLocked, roundsToStore, settingsSchema, skipped, turnOrder, type GameState, type Mode, type Settings, type Status
 } from '../shared/game'
 
 const PLAYERS = ['ana', 'ben', 'cid', 'dan']
 const T0 = 1_000_000
 
 function settings(mode: Mode, roundsTotal = 2): Settings {
-  return { theme: 'A tram stops at a station that is not on any map', mode, genre: 'adventure', roundsTotal, charLimit: 300, timeLimitS: 60 }
+  return { theme: 'A tram stops at a station that is not on any map', mode, genre: 'adventure', roundsTotal, charLimit: 300, timeLimitS: 60, endless: false }
 }
 
 /** Plays a whole game and records who wrote in each round and every status visited. */
@@ -197,6 +197,45 @@ describe('🧪 the game always finishes after rounds_total', () => {
       })
     }
   }
+})
+
+describe('🧪 endless stories: the host ends them, and the cap always does', () => {
+  const endless: Settings = { ...settings('chaos', LIMITS.endlessRounds), endless: true }
+  const reveal = (round: number): GameState => ({ status: 'reveal', round, turnIndex: 0, phaseEndsAt: null })
+
+  it('stores the safety cap as rounds_total, whatever the client sent', () => {
+    expect(roundsToStore({ endless: true, roundsTotal: 3 })).toBe(LIMITS.endlessRounds)
+    expect(roundsToStore({ endless: false, roundsTotal: 3 })).toBe(3)
+  })
+
+  it('keeps going past the usual maximum until the host ends it', () => {
+    const next = advance(reveal(LIMITS.rounds.max + 2), endless, 4, T0)
+    expect(next).toMatchObject({ status: 'writing', round: LIMITS.rounds.max + 3 })
+  })
+
+  it('finishes from the reveal screen when the host ends it, keeping the rounds played', () => {
+    expect(advance(reveal(7), endless, 4, T0, 'finish')).toEqual({ status: 'finished', round: 7, turnIndex: 0, phaseEndsAt: null })
+  })
+
+  it('finishes on its own at the safety cap', () => {
+    const { final, writes } = play('chaos', LIMITS.endlessRounds)
+    expect(final.status).toBe('finished')
+    expect(Object.keys(writes)).toHaveLength(LIMITS.endlessRounds)
+  })
+
+  it('cannot be ended mid-round', () => {
+    const writing: GameState = { status: 'writing', round: 3, turnIndex: 0, phaseEndsAt: T0 }
+    expect(() => advance(writing, endless, 4, T0, 'finish')).toThrow(/between rounds/)
+  })
+
+  it('a normal story cannot be ended early', () => {
+    expect(() => advance(reveal(1), settings('chaos', 3), 4, T0, 'finish')).toThrow(/endless/)
+  })
+
+  it('endless defaults to off', () => {
+    const { endless: _, ...rest } = settings('chaos')
+    expect(settingsSchema.parse(rest).endless).toBe(false)
+  })
 })
 
 describe('🧪 over-limit text is rejected, never truncated', () => {

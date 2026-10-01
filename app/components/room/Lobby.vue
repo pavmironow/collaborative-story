@@ -36,7 +36,9 @@ const rules = computed(() => {
   return [
     { icon: 'i-lucide-drama', text: `Genre: ${genre.emoji} ${genre.label}` },
     { icon: 'i-lucide-shuffle', text: MODE_LABELS[r.mode].description },
-    { icon: 'i-lucide-repeat', text: `${r.rounds_total} rounds. Everyone writes once per round.` },
+    r.endless
+      ? { icon: 'i-lucide-infinity', text: 'Endless. Rounds keep going until the host ends the story. Everyone writes once per round.' }
+      : { icon: 'i-lucide-repeat', text: `${r.rounds_total} rounds. Everyone writes once per round.` },
     { icon: 'i-lucide-timer', text: r.mode === 'chaos' ? `${time} per round.` : `${time} per turn.` },
     { icon: 'i-lucide-type', text: `Up to ${r.char_limit} characters each time.` },
     { icon: 'i-lucide-skip-forward', text: 'Miss the timer and your turn is skipped. You still play the next round.' }

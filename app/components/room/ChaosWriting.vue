@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { checkFragment } from '#shared/game'
 import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
+import { roundLabel } from '#shared/room'
 
 const props = defineProps<{
   room: RoomRow
@@ -79,7 +80,7 @@ onBeforeUnmount(() => clearInterval(closer))
           Chaos Mode · everyone writes at once
         </p>
         <h1 class="text-2xl font-bold">
-          Round {{ room.current_round }} of {{ room.rounds_total }}
+          {{ roundLabel(room) }}
         </h1>
       </div>
       <RoomCountdown

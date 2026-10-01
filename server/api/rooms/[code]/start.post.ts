@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const next = advance(toGameState(room), toSettings(room), players.length, Date.now())
   // Conditional update: only one start can win, and players are locked from this moment.
   const { data, error } = await useSupabaseAdmin().from('rooms')
-    .update({ status: next.status, current_round: next.round, turn_index: next.turnIndex, phase_ends_at: new Date(next.phaseEndsAt!).toISOString() })
+    .update({ status: next.status, current_round: next.round, turn_index: next.turnIndex, phase_ends_at: new Date(next.phaseEndsAt!).toISOString(), started_at: new Date().toISOString() })
     .eq('id', room.id).eq('status', 'lobby')
     .select('id')
   if (error) throw createError({ statusCode: 500, statusMessage: 'Could not start the story' })

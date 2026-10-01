@@ -19,13 +19,15 @@ export async function submittedIds(room: RoomRow): Promise<string[]> {
 }
 
 export function stateUpdate(next: ReturnType<typeof advance>) {
+  const now = new Date().toISOString()
   return {
     status: next.status,
     current_round: next.round,
     turn_index: next.turnIndex,
     phase_ends_at: next.phaseEndsAt ? new Date(next.phaseEndsAt).toISOString() : null,
     merge_started_at: null,
-    updated_at: new Date().toISOString()
+    updated_at: now,
+    ...(next.status === 'finished' ? { finished_at: now } : {})
   }
 }
 
@@ -120,9 +122,9 @@ export async function claimMerge(room: RoomRow): Promise<'merged' | 'recovered' 
   return takeover ? 'recovered' : 'merged'
 }
 
-/** Host moves from `reveal` to the next round (or the end). */
-export async function continueFromReveal(room: RoomRow, playerCount: number): Promise<boolean> {
-  const next = advance(toGameState(room), toSettings(room), playerCount, Date.now())
+/** Host moves from `reveal` to the next round, or to the end (last round, or `finish` in an endless game). */
+export async function continueFromReveal(room: RoomRow, playerCount: number, options: { finish?: boolean } = {}): Promise<boolean> {
+  const next = advance(toGameState(room), toSettings(room), playerCount, Date.now(), options.finish ? 'finish' : undefined)
   const { data } = await useSupabaseAdmin().from('rooms').update(stateUpdate(next))
     .eq('id', room.id).eq('status', 'reveal').eq('current_round', room.current_round).select('id')
   return !!data?.length

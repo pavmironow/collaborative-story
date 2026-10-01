@@ -8,7 +8,9 @@ export interface RoomRow {
   theme: string
   mode: Mode
   genre: string
+  /** Maximum rounds; for an endless game this is the safety cap (see LIMITS.endlessRounds). */
   rounds_total: number
+  endless: boolean
   char_limit: number
   time_limit_s: number
   status: Status
@@ -18,6 +20,8 @@ export interface RoomRow {
   seed: string
   created_at: string
   updated_at: string
+  started_at: string | null
+  finished_at: string | null
   merge_started_at: string | null
   cover_url: string | null
   cover_started_at: string | null
@@ -68,8 +72,19 @@ export function toSettings(room: RoomRow): Settings {
     genre: room.genre as Settings['genre'],
     roundsTotal: room.rounds_total,
     charLimit: room.char_limit,
-    timeLimitS: room.time_limit_s
+    timeLimitS: room.time_limit_s,
+    endless: room.endless
   }
+}
+
+/** "Round 7" in an endless game, "Round 2 of 5" otherwise. */
+export function roundLabel(room: Pick<RoomRow, 'current_round' | 'rounds_total' | 'endless'>): string {
+  return room.endless ? `Round ${room.current_round}` : `Round ${room.current_round} of ${room.rounds_total}`
+}
+
+/** "Endless" or "3 rounds", for room summaries. */
+export function roundsSummary(room: Pick<RoomRow, 'rounds_total' | 'endless'>): string {
+  return room.endless ? 'Endless' : `${room.rounds_total} rounds`
 }
 
 export const MODE_LABELS: Record<Mode, { label: string, description: string }> = {

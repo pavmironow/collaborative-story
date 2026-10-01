@@ -11,6 +11,8 @@ export type Status = 'lobby' | 'writing' | 'merging' | 'reveal' | 'finished'
 
 export const LIMITS = {
   rounds: { min: 2, max: 5, default: 2 },
+  /** Safety cap for endless games: they finish on their own after this many rounds. */
+  endlessRounds: 50,
   charLimit: { min: 50, max: 1000, default: 300 },
   timeLimitS: { min: 15, max: 300, default: 90 },
   players: { min: 2, max: 10 },
@@ -32,10 +34,17 @@ export const settingsSchema = z.object({
     .max(LIMITS.charLimit.max, `At most ${LIMITS.charLimit.max} characters`),
   timeLimitS: z.number().int()
     .min(LIMITS.timeLimitS.min, `At least ${LIMITS.timeLimitS.min} seconds`)
-    .max(LIMITS.timeLimitS.max, `At most ${LIMITS.timeLimitS.max / 60} minutes`)
+    .max(LIMITS.timeLimitS.max, `At most ${LIMITS.timeLimitS.max / 60} minutes`),
+  /** The host ends the story; roundsTotal becomes the safety cap. */
+  endless: z.boolean().default(false)
 })
 
-export type Settings = z.infer<typeof settingsSchema>
+export type Settings = z.output<typeof settingsSchema>
+
+/** Rounds to store for a new room: an endless game always gets the safety cap, whatever the client sent. */
+export function roundsToStore(settings: Pick<Settings, 'endless' | 'roundsTotal'>): number {
+  return settings.endless ? LIMITS.endlessRounds : settings.roundsTotal
+}
 
 export const playerNameSchema = z.string().trim()
   .min(LIMITS.name.min, 'Enter your name')
@@ -122,11 +131,23 @@ export function skipped(expected: readonly string[], submitted: readonly string[
 /**
  * The next state after the current phase ends. Throws on illegal moves so a bug can
  * never send the game backwards or past the end.
+ * `intent: 'finish'` is the host ending an endless story from the reveal screen.
  */
-export function advance(state: GameState, settings: Pick<Settings, 'mode' | 'roundsTotal' | 'timeLimitS'>, playerCount: number, now: number): GameState {
+export function advance(
+  state: GameState,
+  settings: Pick<Settings, 'mode' | 'roundsTotal' | 'timeLimitS'> & Partial<Pick<Settings, 'endless'>>,
+  playerCount: number,
+  now: number,
+  intent?: 'finish'
+): GameState {
   const deadline = now + settings.timeLimitS * 1000
   const lastRound = state.round >= settings.roundsTotal
   let next: GameState
+
+  if (intent === 'finish') {
+    if (!settings.endless) throw new Error('Only an endless story can be ended early')
+    if (state.status !== 'reveal') throw new Error('An endless story can only be ended between rounds')
+  }
 
   switch (state.status) {
     case 'lobby':
@@ -147,7 +168,7 @@ export function advance(state: GameState, settings: Pick<Settings, 'mode' | 'rou
       next = { ...state, status: 'reveal' }
       break
     case 'reveal':
-      next = lastRound
+      next = lastRound || intent === 'finish'
         ? { ...state, status: 'finished' }
         : { status: 'writing', round: state.round + 1, turnIndex: 0, phaseEndsAt: deadline }
       break

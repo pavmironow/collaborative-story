@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildMergeUserMessage, checkMerge, MERGE_SYSTEM_PROMPT } from '../shared/merge'
+import { buildMergeUserMessage, checkMerge, MERGE_SYSTEM_PROMPT, STORY_CONTEXT_CHAPTERS } from '../shared/merge'
 
 const fragments = [
   { id: 'id-ana', text: 'The conductor had no face.' },
@@ -47,6 +47,15 @@ describe('merge prompt', () => {
     expect(msg).toContain('<fragment label="F3">\nThe street was gone.\n</fragment>')
     expect(msg).toContain('<chapter n="1">\nChapter one text\n</chapter>')
     expect(msg).toContain('from these 3 fragments')
+  })
+
+  it('sends only the latest chapters of a long story, keeping their real numbers', () => {
+    const storySoFar = Array.from({ length: 10 }, (_, i) => `Chapter ${i + 1} text`)
+    const msg = buildMergeUserMessage({ theme: 't', storySoFar, fragments })
+    expect(msg.match(/<chapter /g)).toHaveLength(STORY_CONTEXT_CHAPTERS)
+    expect(msg).not.toContain('Chapter 4 text')
+    expect(msg).toContain('<chapter n="5">\nChapter 5 text\n</chapter>')
+    expect(msg).toContain('<chapter n="10">\nChapter 10 text\n</chapter>')
   })
 
   it('does not reveal author names to the model (they are players, not characters)', () => {
