@@ -10,7 +10,7 @@ const RECENT = 2
 const names = computed(() => new Map(props.players.map(p => [p.user_id, p.name])))
 const rounds = computed(() => Array.from({ length: Math.max(0, props.beforeRound - 1) }, (_, i) => i + 1).map((round) => {
   const chapter = props.chapters.find(c => c.round === round)
-  const parts = props.fragments.filter(f => f.round === round && f.status === 'submitted')
+  const parts = props.fragments.filter(f => f.round === round && f.status === 'submitted' && !f.hidden_at).sort((a, b) => a.seq - b.seq)
   return { round, text: chapter?.text ?? null, chapter, parts }
 }))
 const open = ref(!props.collapsed)

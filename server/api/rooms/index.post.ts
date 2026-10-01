@@ -19,11 +19,15 @@ export default defineEventHandler(async (event) => {
   }
   const { hostName, theme, mode, genre, charLimit, timeLimitS, endless, isPublic } = parsed.data
   const db = useSupabaseAdmin()
+  // An open story has no lobby and no rounds: it is endless and open for writing from the start.
+  const open = mode === 'open'
+  const opening = open ? { status: 'writing', current_round: 1, started_at: new Date().toISOString() } : {}
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: room, error } = await db.from('rooms').insert({
       code: generateCode(), host_id: userId, theme, mode, genre: resolveGenre(genre),
-      rounds_total: roundsToStore(parsed.data), endless, is_public: isPublic, char_limit: charLimit, time_limit_s: timeLimitS
+      rounds_total: roundsToStore({ ...parsed.data, endless: endless || open }), endless: endless || open,
+      is_public: isPublic, char_limit: charLimit, time_limit_s: timeLimitS, ...opening
     }).select('id, code').single()
 
     if (error?.code === '23505') continue // code collision, try another

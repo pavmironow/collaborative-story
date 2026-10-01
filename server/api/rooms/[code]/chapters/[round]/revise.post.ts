@@ -26,7 +26,7 @@ export default defineEventHandler(async (event) => {
   const db = useSupabaseAdmin()
   const [{ data: chapter }, { data: fragments }] = await Promise.all([
     db.from('chapters').select('*').eq('room_id', room.id).eq('round', round).maybeSingle(),
-    db.from('fragments').select('*').eq('room_id', room.id).lte('round', round).eq('status', 'submitted').order('created_at')
+    db.from('fragments').select('*').eq('room_id', room.id).lte('round', round).eq('status', 'submitted').is('hidden_at', null).order('created_at')
   ])
   const submitted = (fragments ?? []) as FragmentRow[]
   const parts = submitted.filter(f => f.round === round)

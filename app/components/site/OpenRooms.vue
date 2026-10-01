@@ -17,7 +17,7 @@ onBeforeUnmount(() => clearInterval(timer))
 const summary = (r: OpenRoom) => [
   getGenre(r.genre).label,
   r.mode === 'chaos' ? null : MODE_LABELS[r.mode].label,
-  r.endless ? 'Endless' : `${r.roundsTotal} rounds`,
+  r.mode === 'open' ? (r.inProgress ? 'writing now' : null) : r.endless ? 'Endless' : `${r.roundsTotal} rounds`,
   `${r.players}/${r.maxPlayers} writers`
 ].filter(Boolean).join(' · ')
 </script>

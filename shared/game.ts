@@ -6,7 +6,8 @@
 import { z } from 'zod'
 import { GENRE_IDS, SURPRISE } from './genres'
 
-export type Mode = 'fixed' | 'random' | 'chaos'
+/** `open`: no rounds or timer, parts are stacked as they come (shared/open-story.ts). */
+export type Mode = 'fixed' | 'random' | 'chaos' | 'open'
 export type Status = 'lobby' | 'writing' | 'merging' | 'reveal' | 'finished'
 
 export const LIMITS = {
@@ -24,7 +25,7 @@ export const settingsSchema = z.object({
   theme: z.string().trim()
     .min(LIMITS.theme.min, `Describe the theme in at least ${LIMITS.theme.min} characters`)
     .max(LIMITS.theme.max, `Keep the theme under ${LIMITS.theme.max} characters`),
-  mode: z.enum(['fixed', 'random', 'chaos'], 'Choose a mode'),
+  mode: z.enum(['fixed', 'random', 'chaos', 'open'], 'Choose a mode'),
   genre: z.enum([...GENRE_IDS, SURPRISE], 'Choose a genre'),
   roundsTotal: z.number().int()
     .min(LIMITS.rounds.min, `At least ${LIMITS.rounds.min} rounds`)

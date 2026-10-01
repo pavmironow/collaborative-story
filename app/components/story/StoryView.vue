@@ -113,6 +113,12 @@ const titleClass = computed(() => props.story.theme.length > 120
       >
         Chaos Mode: everyone wrote each round at the same time, and AI wove the parts together.
       </p>
+      <p
+        v-else-if="story.mode === 'open'"
+        class="mt-3 text-xs text-muted"
+      >
+        Open story: the writers added their parts one after another, whenever they liked.
+      </p>
     </footer>
   </article>
 </template>

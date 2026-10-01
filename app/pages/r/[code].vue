@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { buildStory } from '#shared/story'
+import { canJoin } from '#shared/open-story'
 
 definePageMeta({ layout: 'game' })
 
@@ -60,7 +61,7 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
       />
 
       <RoomJoinForm
-        v-if="!me && room.status === 'lobby'"
+        v-if="!me && canJoin(room, players.length).ok"
         :room="room"
         :host-name="hostName"
         :player-count="players.length"
@@ -83,6 +84,18 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
         :online="online"
         :user-id="userId!"
         :is-host="isHost"
+      />
+
+      <RoomOpenStory
+        v-else-if="room.status === 'writing' && room.mode === 'open'"
+        :room="room"
+        :players="players"
+        :fragments="fragments"
+        :chapters="chapters"
+        :user-id="userId!"
+        :is-host="isHost"
+        :online="online"
+        @submitted="refresh"
       />
 
       <RoomChaosWriting

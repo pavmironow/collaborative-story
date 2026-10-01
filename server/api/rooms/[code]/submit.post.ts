@@ -5,6 +5,8 @@ export default defineEventHandler(async (event) => {
   const room = await loadRoom(getRouterParam(event, 'code')!)
   const players = await loadPlayers(room.id)
   if (!players.some(p => p.user_id === userId)) throw createError({ statusCode: 403, statusMessage: 'You are not a writer in this story' })
+  // Open story: no turns or deadline, parts are added one after another.
+  if (room.mode === 'open') return await submitOpenPart(room, userId, (await readBody<{ text?: unknown }>(event))?.text)
   if (room.status !== 'writing') throw createError({ statusCode: 409, statusMessage: 'Writing is closed right now' })
   if (!expectedWriters(room, players).includes(userId)) throw createError({ statusCode: 409, statusMessage: 'It is not your turn' })
   if (room.phase_ends_at && Date.now() > Date.parse(room.phase_ends_at) + SUBMIT_GRACE_MS) {

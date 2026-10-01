@@ -32,7 +32,8 @@ export function buildStory(room: RoomRow, players: PlayerRow[], fragments: Fragm
   const seats = [...players].sort((a, b) => a.seat - b.seat)
   const nameOf = new Map(seats.map(p => [p.user_id, p.name]))
   const seatOf = new Map(seats.map(p => [p.user_id, p.seat]))
-  const submitted = fragments.filter(f => f.status === 'submitted' && f.text)
+  // Parts the host removed from an open story are not part of it.
+  const submitted = fragments.filter(f => f.status === 'submitted' && f.text && !f.hidden_at)
   const authorOfFragment = new Map(submitted.map(f => [f.id, f.player_id]))
   const bySeat = (ids: string[]) => [...new Set(ids)].sort((a, b) => (seatOf.get(a) ?? 0) - (seatOf.get(b) ?? 0)).map(id => nameOf.get(id) ?? 'Someone')
 

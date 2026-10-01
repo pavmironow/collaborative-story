@@ -25,8 +25,9 @@ These rules hold during every game. If a change breaks one of them, it's a bug, 
 **Fairness**
 - 🧪 Each player gets **exactly one** turn per round: never zero (unless skipped), never two.
 - 🧪 In random order, nobody is picked twice before everyone has written in that round.
-- 🧪 The player list and rules are **locked once the game starts**. Players can't join or change settings mid-game.
+- 🧪 The player list and rules are **locked once the game starts**. Players can't join or change settings mid-game. *Exception: an **open story** takes new writers for as long as it is being written (the rules stay locked).*
 - 🧪 A missed turn is marked **skipped**. AI never writes on a player's behalf, and the player stays in later rounds.
+- 🧪 In an **open story**, nobody adds **two parts in a row**: you write again once someone else has. The database enforces this under a lock on the room, so two posts at the same moment can't both slip through.
 
 **Game flow**
 - 🧪 The game only moves forward: `lobby → writing → (merging → reveal) → … → finished`. It never goes back or skips a step.
@@ -37,7 +38,7 @@ These rules hold during every game. If a change breaks one of them, it's a bug, 
 
 **Contributions**
 - 🧪 A submission longer than the character limit is rejected. Text is never silently cut.
-- A submitted fragment is **never lost or changed**. The original text is kept exactly as written.
+- A submitted fragment is **never lost or changed**. The original text is kept exactly as written. In an open story the host can **remove** a part from the story; its row and text are kept, and only its author still sees it.
 - In Chaos Mode, **nobody can read another player's draft** before the round closes. The database (RLS) enforces this, not the UI.
 
 **Resilience**
