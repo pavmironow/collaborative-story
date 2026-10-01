@@ -25,3 +25,6 @@ logs
 
 # Netlify local build output
 .netlify
+
+# Git Bash crash dumps (Windows)
+*.stackdump
