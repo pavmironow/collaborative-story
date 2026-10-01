@@ -104,7 +104,7 @@ onBeforeUnmount(() => clearInterval(closer))
     <section
       v-if="done"
       aria-labelledby="your-part"
-      class="rounded-lg border border-success/40 bg-success/5 p-4"
+      class="ink-card bg-success/10 p-4"
     >
       <h2
         id="your-part"

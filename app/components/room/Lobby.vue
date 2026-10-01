@@ -93,7 +93,7 @@ const rules = computed(() => {
         Writers ({{ players.length }}/{{ LIMITS.players.max }})
       </h2>
       <ul
-        class="mt-2 divide-y divide-default rounded-lg border border-default"
+        class="ink-card mt-2 divide-y divide-default"
         aria-live="polite"
       >
         <li
