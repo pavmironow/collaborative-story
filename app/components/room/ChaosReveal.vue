@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
 import { roundLabel } from '#shared/room'
+import { isEdited } from '#shared/revision'
 
 const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[], isHost: boolean }>()
 
@@ -15,6 +16,7 @@ const parts = computed(() => props.fragments.filter(f => f.round === round.value
 const skippedNames = computed(() => props.fragments.filter(f => f.round === round.value && f.status === 'skipped').map(f => names.value.get(f.player_id)))
 const last = computed(() => round.value >= props.room.rounds_total)
 const hostName = computed(() => names.value.get(props.room.host_id) ?? 'the host')
+const edited = computed(() => !!chapter.value && isEdited(chapter.value))
 
 const continuing = ref(false)
 const error = ref('')
@@ -76,7 +78,12 @@ const waitingFor = computed(() => {
       class="ink-card space-y-4 bg-coral-50 p-4 dark:bg-coral-950/40"
     >
       <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
-        <UIcon name="i-lucide-sparkles" /> Woven by AI from everyone’s parts
+        <template v-if="edited">
+          <UIcon name="i-lucide-pencil-line" /> Revised by {{ hostName }} from everyone’s parts
+        </template>
+        <template v-else>
+          <UIcon name="i-lucide-sparkles" /> Woven by AI from everyone’s parts
+        </template>
       </p>
       <div
         v-for="(p, i) in paragraphs"
