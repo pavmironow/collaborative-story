@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { buildStory } from '#shared/story'
 
+definePageMeta({ layout: 'game' })
+
 const code = (useRoute().params.code as string).toUpperCase()
 const { room, players, fragments, chapters, submitters, clockOffset, online, userId, me, isHost, status, connected, networkOnline, refresh } = useRoom(code)
 const story = computed(() => room.value ? buildStory(room.value, players.value, fragments.value, chapters.value) : null)
