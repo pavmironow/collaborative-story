@@ -13,6 +13,14 @@ const sections = [
     ]
   },
   {
+    icon: 'i-lucide-door-open',
+    title: 'Public and private rooms',
+    body: [
+      'A private room (the default) can only be joined with its link or code.',
+      'A public room is listed under Open rooms on the homepage while it waits in the lobby, so anyone can join. Its theme is visible to everyone. Once the story starts, it disappears from the list.'
+    ]
+  },
+  {
     icon: 'i-lucide-zap',
     title: 'Chaos Mode',
     body: [

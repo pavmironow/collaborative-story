@@ -28,18 +28,22 @@ const steps = [
         </div>
       </div>
 
-      <figure class="ink-card bg-sky-50 p-6 dark:bg-elevated">
-        <figcaption class="text-xs font-bold tracking-wide text-muted uppercase">
-          From a story written by Ana, Ben &amp; Cid
-        </figcaption>
-        <blockquote class="mt-3 space-y-3 text-lg leading-relaxed">
-          <p>The keeper found a second staircase, one that only went down. It was warm, as if someone had just walked it.</p>
-          <p>At the bottom waited a door with her own name carved into it, in handwriting she did not recognise.</p>
-        </blockquote>
-        <p class="mt-3 text-sm text-muted">
-          🐉 Fantasy · Chaos Mode · 3 writers
-        </p>
-      </figure>
+      <div class="space-y-8">
+        <SiteOpenRooms />
+
+        <figure class="ink-card bg-sky-50 p-6 dark:bg-elevated">
+          <figcaption class="text-xs font-bold tracking-wide text-muted uppercase">
+            From a story written by Ana, Ben &amp; Cid
+          </figcaption>
+          <blockquote class="mt-3 space-y-3 text-lg leading-relaxed">
+            <p>The keeper found a second staircase, one that only went down. It was warm, as if someone had just walked it.</p>
+            <p>At the bottom waited a door with her own name carved into it, in handwriting she did not recognise.</p>
+          </blockquote>
+          <p class="mt-3 text-sm text-muted">
+            🐉 Fantasy · Chaos Mode · 3 writers
+          </p>
+        </figure>
+      </div>
     </section>
 
     <section

@@ -36,7 +36,9 @@ export const settingsSchema = z.object({
     .min(LIMITS.timeLimitS.min, `At least ${LIMITS.timeLimitS.min} seconds`)
     .max(LIMITS.timeLimitS.max, `At most ${LIMITS.timeLimitS.max / 60} minutes`),
   /** The host ends the story; roundsTotal becomes the safety cap. */
-  endless: z.boolean().default(false)
+  endless: z.boolean().default(false),
+  /** Listed on the homepage while in the lobby, so anyone can join. Private rooms need the link or code. */
+  isPublic: z.boolean().default(false)
 })
 
 export type Settings = z.output<typeof settingsSchema>

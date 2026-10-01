@@ -11,6 +11,8 @@ export interface RoomRow {
   /** Maximum rounds; for an endless game this is the safety cap (see LIMITS.endlessRounds). */
   rounds_total: number
   endless: boolean
+  /** Listed on the homepage while in the lobby. */
+  is_public: boolean
   char_limit: number
   time_limit_s: number
   status: Status
@@ -89,7 +91,8 @@ export function toSettings(room: RoomRow): Settings {
     roundsTotal: room.rounds_total,
     charLimit: room.char_limit,
     timeLimitS: room.time_limit_s,
-    endless: room.endless
+    endless: room.endless,
+    isPublic: room.is_public
   }
 }
 

@@ -18,9 +18,18 @@ const state = reactive<Schema>({
   roundsTotal: LIMITS.rounds.default,
   charLimit: LIMITS.charLimit.default,
   timeLimitS: LIMITS.timeLimitS.default,
-  endless: false
+  endless: false,
+  isPublic: false
 })
 
+const visibilityItems = [
+  { value: 'private', label: 'Private', description: 'Only people with the link or code can join.' },
+  { value: 'public', label: 'Public', description: 'Listed on the homepage: anyone can see the theme and join until the story starts.' }
+]
+const visibility = computed({
+  get: () => state.isPublic ? 'public' : 'private',
+  set: (v: string) => { state.isPublic = v === 'public' }
+})
 const modeItems = (['chaos', 'fixed', 'random'] as Mode[]).map(value => ({ value, ...MODE_LABELS[value] }))
 const charLimitItems = [150, 300, 500, 800].map(n => ({ label: `${n} characters`, value: n }))
 const timeItems = [30, 60, 90, 120, 180].map(s => ({ label: formatDuration(s), value: s }))
@@ -97,6 +106,20 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <RoomThemeHelper
           v-model="state.theme"
           :genre="state.genre"
+        />
+      </UFormField>
+
+      <UFormField
+        label="Who can join"
+        name="isPublic"
+      >
+        <URadioGroup
+          v-model="visibility"
+          :items="visibilityItems"
+          variant="card"
+          orientation="horizontal"
+          class="w-full"
+          :ui="{ fieldset: 'grid sm:grid-cols-2' }"
         />
       </UFormField>
 

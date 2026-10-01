@@ -17,13 +17,13 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) {
     throw createError({ statusCode: 422, statusMessage: 'Invalid settings', data: z.flattenError(parsed.error).fieldErrors })
   }
-  const { hostName, theme, mode, genre, charLimit, timeLimitS, endless } = parsed.data
+  const { hostName, theme, mode, genre, charLimit, timeLimitS, endless, isPublic } = parsed.data
   const db = useSupabaseAdmin()
 
   for (let attempt = 0; attempt < 5; attempt++) {
     const { data: room, error } = await db.from('rooms').insert({
       code: generateCode(), host_id: userId, theme, mode, genre: resolveGenre(genre),
-      rounds_total: roundsToStore(parsed.data), endless, char_limit: charLimit, time_limit_s: timeLimitS
+      rounds_total: roundsToStore(parsed.data), endless, is_public: isPublic, char_limit: charLimit, time_limit_s: timeLimitS
     }).select('id, code').single()
 
     if (error?.code === '23505') continue // code collision, try another
