@@ -32,7 +32,8 @@ export default defineNuxtConfig({
 
   // Room pages depend on the browser session (localStorage) and live data: render on the client.
   routeRules: {
-    '/r/**': { ssr: false }
+    '/r/**': { ssr: false },
+    '/stories': { ssr: false }
   },
 
   compatibilityDate: '2026-06-30',

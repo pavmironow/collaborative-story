@@ -1,217 +1,83 @@
 <script setup lang="ts">
-import type { FormSubmitEvent } from '@nuxt/ui'
-import type { z } from 'zod'
-import { LIMITS, formatDuration, playerNameSchema, settingsSchema, type Mode } from '#shared/game'
-import { MODE_LABELS } from '#shared/room'
-import { DEFAULT_GENRE } from '#shared/genres'
-
-const schema = settingsSchema.extend({ hostName: playerNameSchema })
-type Schema = z.output<typeof schema>
-
-const state = reactive<Schema>({
-  hostName: '',
-  theme: '',
-  mode: 'chaos',
-  genre: DEFAULT_GENRE,
-  roundsTotal: LIMITS.rounds.default,
-  charLimit: LIMITS.charLimit.default,
-  timeLimitS: LIMITS.timeLimitS.default,
-  endless: false
-})
-
-const modeItems = (['chaos', 'fixed', 'random'] as Mode[]).map(value => ({ value, ...MODE_LABELS[value] }))
-const charLimitItems = [150, 300, 500, 800].map(n => ({ label: `${n} characters`, value: n }))
-const timeItems = [30, 60, 90, 120, 180].map(s => ({ label: formatDuration(s), value: s }))
-const timeHint = computed(() => state.mode === 'chaos' ? 'Per round: everyone writes at the same time.' : 'Per player turn.')
-
-const submitting = ref(false)
-const error = ref('')
-
-const joinCode = ref('')
-const validCode = computed(() => /^[A-Z0-9]{5}$/.test(joinCode.value.trim().toUpperCase()))
-function joinRoom() {
-  if (validCode.value) navigateTo(`/r/${joinCode.value.trim().toUpperCase()}`)
-}
-
-async function onSubmit(event: FormSubmitEvent<Schema>) {
-  submitting.value = true
-  error.value = ''
-  try {
-    const { code } = await api<{ code: string }>('/api/rooms', { method: 'POST', body: event.data })
-    await navigateTo(`/r/${code}`)
-  } catch (e) {
-    error.value = (e as { statusMessage?: string }).statusMessage ?? 'Could not create the room. Check your connection and try again.'
-  } finally {
-    submitting.value = false
-  }
-}
+const steps = [
+  { icon: 'i-lucide-sparkles', title: 'Create', text: 'Pick a genre and a theme, then share the link or the room code.' },
+  { icon: 'i-lucide-pen-line', title: 'Write', text: 'Short timed rounds. Everyone writes at once, nobody sees the others’ drafts.' },
+  { icon: 'i-lucide-book-open', title: 'Read', text: 'AI weaves the parts into one chapter. Share the finished story.' }
+]
 </script>
 
 <template>
-  <UContainer class="max-w-xl py-8 sm:py-12">
-    <h1 class="text-3xl font-bold">
-      Collaborative Story
-    </h1>
-    <p class="mt-2 text-muted">
-      Write a story together with friends in short, timed rounds. Create a room and share the link.
-    </p>
-
-    <form
-      class="mt-6 flex gap-2"
-      aria-label="Join a room with a code"
-      @submit.prevent="joinRoom"
-    >
-      <UInput
-        v-model="joinCode"
-        placeholder="Have a code? e.g. NEG9G"
-        aria-label="Room code"
-        :maxlength="5"
-        autocapitalize="characters"
-        class="min-w-0 flex-1 font-mono uppercase"
-      />
-      <UButton
-        type="submit"
-        color="neutral"
-        variant="outline"
-        :disabled="!validCode"
-      >
-        Join room
-      </UButton>
-    </form>
-
-    <USeparator
-      label="or create a new story"
-      class="mt-8"
-    />
-
-    <UForm
-      :schema="schema"
-      :state="state"
-      class="mt-6 space-y-6"
-      @submit="onSubmit"
-    >
-      <UFormField
-        label="Your name"
-        name="hostName"
-        required
-      >
-        <UInput
-          v-model="state.hostName"
-          :maxlength="LIMITS.name.max"
-          placeholder="e.g. Pavel"
-          autocomplete="nickname"
-          class="w-full"
-        />
-      </UFormField>
-
-      <UFormField
-        label="Genre"
-        name="genre"
-        help="Sets the mood for the AI helper, the chapters and the cover."
-      >
-        <RoomGenrePicker v-model="state.genre" />
-      </UFormField>
-
-      <UFormField
-        label="Story theme"
-        name="theme"
-        :hint="`${state.theme.length}/${LIMITS.theme.max}`"
-        required
-      >
-        <UTextarea
-          v-model="state.theme"
-          :maxlength="LIMITS.theme.max"
-          :rows="3"
-          autoresize
-          placeholder="A tram in Prague stops at a station that is not on any map."
-          class="w-full"
-        />
-        <RoomThemeHelper
-          v-model="state.theme"
-          :genre="state.genre"
-        />
-      </UFormField>
-
-      <UFormField
-        label="Mode"
-        name="mode"
-      >
-        <URadioGroup
-          v-model="state.mode"
-          :items="modeItems"
-          variant="card"
-          class="w-full"
-        />
-      </UFormField>
-
-      <div class="grid gap-4 sm:grid-cols-3">
-        <UFormField
-          label="Rounds"
-          name="roundsTotal"
-          :help="state.endless ? `You end the story (max ${LIMITS.endlessRounds} rounds)` : `${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
-        >
-          <UInput
-            v-if="state.endless"
-            model-value="∞"
-            disabled
-            aria-label="Rounds: endless"
-            class="w-full"
-          />
-          <UInputNumber
-            v-else
-            v-model="state.roundsTotal"
-            :min="LIMITS.rounds.min"
-            :max="LIMITS.rounds.max"
-            class="w-full"
-          />
-          <USwitch
-            v-model="state.endless"
-            label="Endless"
-            class="mt-2"
-          />
-        </UFormField>
-
-        <UFormField
-          label="Max length"
-          name="charLimit"
-        >
-          <USelect
-            v-model="state.charLimit"
-            :items="charLimitItems"
-            class="w-full"
-          />
-        </UFormField>
-
-        <UFormField
-          label="Time limit"
-          name="timeLimitS"
-          :help="timeHint"
-        >
-          <USelect
-            v-model="state.timeLimitS"
-            :items="timeItems"
-            class="w-full"
-          />
-        </UFormField>
+  <UContainer class="py-10 sm:py-16">
+    <section class="grid items-start gap-10 lg:grid-cols-[1.1fr_1fr] lg:gap-14">
+      <div>
+        <h1 class="text-4xl leading-tight font-bold sm:text-5xl">
+          Write a story <span class="ink-mark">together</span>, one round at a time.
+        </h1>
+        <p class="mt-4 max-w-prose text-lg text-muted">
+          Everyone writes at once. Nobody sees the others’ drafts. Then the parts are woven into one chapter, and the story grows round by round.
+        </p>
+        <div class="mt-8 max-w-md space-y-4">
+          <UButton
+            to="/new"
+            size="xl"
+            icon="i-lucide-sparkles"
+          >
+            Create a room
+          </UButton>
+          <SiteJoinByCode />
+        </div>
       </div>
 
-      <UAlert
-        v-if="error"
-        color="error"
-        variant="subtle"
-        icon="i-lucide-circle-alert"
-        :title="error"
-      />
+      <figure class="ink-card bg-sky-50 p-6 dark:bg-elevated">
+        <figcaption class="text-xs font-bold tracking-wide text-muted uppercase">
+          From a story written by Ana, Ben &amp; Cid
+        </figcaption>
+        <blockquote class="mt-3 space-y-3 text-lg leading-relaxed">
+          <p>The keeper found a second staircase, one that only went down. It was warm, as if someone had just walked it.</p>
+          <p>At the bottom waited a door with her own name carved into it, in handwriting she did not recognise.</p>
+        </blockquote>
+        <p class="mt-3 text-sm text-muted">
+          🐉 Fantasy · Chaos Mode · 3 writers
+        </p>
+      </figure>
+    </section>
 
-      <UButton
-        type="submit"
-        size="xl"
-        block
-        :loading="submitting"
-        icon="i-lucide-sparkles"
+    <section
+      aria-labelledby="how-it-works"
+      class="mt-16"
+    >
+      <h2
+        id="how-it-works"
+        class="text-2xl font-bold"
       >
-        Create room
+        How it works
+      </h2>
+      <ol class="mt-4 grid gap-4 sm:grid-cols-3">
+        <li
+          v-for="(step, i) in steps"
+          :key="step.title"
+          class="ink-card bg-default p-4"
+        >
+          <p class="flex items-center gap-2 font-display text-lg font-bold">
+            <UIcon
+              :name="step.icon"
+              class="text-primary"
+            />
+            {{ i + 1 }} · {{ step.title }}
+          </p>
+          <p class="mt-1 text-muted">
+            {{ step.text }}
+          </p>
+        </li>
+      </ol>
+      <UButton
+        to="/how-to-play"
+        variant="link"
+        trailing-icon="i-lucide-arrow-right"
+        class="mt-3 px-0"
+      >
+        Full rules
       </UButton>
-    </UForm>
+    </section>
   </UContainer>
 </template>
