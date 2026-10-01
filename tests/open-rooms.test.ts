@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest'
 import { LIMITS, settingsSchema } from '../shared/game'
 import { OPEN_ROOM_MAX_AGE_MS, OPEN_ROOMS_LIMIT, toOpenRooms } from '../shared/open-rooms'
+import { maxPlayers } from '../shared/open-story'
 
 const NOW = Date.parse('2026-10-01T12:00:00Z')
 const ago = (ms: number) => new Date(NOW - ms).toISOString()
 const room = (id: string, patch: Partial<Parameters<typeof toOpenRooms>[0][number]> = {}) => ({
-  id, code: id.toUpperCase(), theme: `Theme ${id}`, genre: 'fantasy', mode: 'chaos' as const, endless: false, rounds_total: 3,
-  status: 'lobby' as const, is_public: true, created_at: ago(60_000), ...patch
+  id, code: id.toUpperCase(), theme: `Theme ${id}`, genre: 'fantasy', mode: 'chaos' as 'chaos' | 'open', endless: false, rounds_total: 3,
+  status: 'lobby' as 'lobby' | 'writing' | 'finished', is_public: true, created_at: ago(60_000), updated_at: ago(60_000), ...patch
 })
 
 describe('🧪 only public lobbies are listed', () => {
@@ -31,6 +32,29 @@ describe('🧪 only public lobbies are listed', () => {
   })
 })
 
+describe('🧪 open stories stay listed while they are written', () => {
+  it('lists a public open story that is being written, but never a running Chaos room', () => {
+    const rooms = [room('open', { mode: 'open', status: 'writing' }), room('chaos', { status: 'writing' })]
+    const list = toOpenRooms(rooms, new Map(), NOW)
+    expect(list.map(r => r.code)).toEqual(['OPEN'])
+    expect(list[0]).toMatchObject({ inProgress: true, maxPlayers: maxPlayers('open') })
+  })
+
+  it('counts an open story from its latest part, not from when it was created', () => {
+    const old = ago(OPEN_ROOM_MAX_AGE_MS * 3)
+    const rooms = [
+      room('active', { mode: 'open', status: 'writing', created_at: old, updated_at: ago(60_000) }),
+      room('quiet', { mode: 'open', status: 'writing', created_at: old, updated_at: ago(OPEN_ROOM_MAX_AGE_MS + 1000) })
+    ]
+    expect(toOpenRooms(rooms, new Map(), NOW).map(r => r.code)).toEqual(['ACTIVE'])
+  })
+
+  it('uses the open story limit for "full"', () => {
+    const counts = new Map([['big', LIMITS.players.max + 1]])
+    expect(toOpenRooms([room('big', { mode: 'open', status: 'writing' })], counts, NOW).map(r => r.code)).toEqual(['BIG'])
+  })
+})
+
 describe('open rooms list', () => {
   it('is newest first, capped, and carries what the homepage shows', () => {
     const rooms = Array.from({ length: OPEN_ROOMS_LIMIT + 5 }, (_, i) => room(`r${i}`, { created_at: ago(i * 1000) }))
@@ -38,7 +62,7 @@ describe('open rooms list', () => {
     expect(list).toHaveLength(OPEN_ROOMS_LIMIT)
     expect(list[0]).toEqual({
       code: 'R0', theme: 'Theme r0', genre: 'fantasy', mode: 'chaos', endless: false, roundsTotal: 3,
-      players: 3, maxPlayers: LIMITS.players.max, createdAt: ago(0)
+      players: 3, maxPlayers: LIMITS.players.max, inProgress: false, activeAt: ago(0)
     })
   })
 

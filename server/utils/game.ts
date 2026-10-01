@@ -57,7 +57,7 @@ export async function tryClosePhase(room: RoomRow, now = Date.now()): Promise<bo
   if (missing.length) {
     await db.from('fragments').upsert(
       missing.map(player_id => ({ room_id: room.id, round: room.current_round, player_id, status: 'skipped', text: null })),
-      { onConflict: 'room_id,round,player_id', ignoreDuplicates: true }
+      { onConflict: 'room_id,round,player_id,seq', ignoreDuplicates: true } // seq is 0 outside open stories
     )
   }
 

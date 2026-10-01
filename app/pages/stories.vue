@@ -5,7 +5,7 @@ import { getGenre } from '#shared/genres'
 
 useSeoMeta({ title: 'My stories · Collaborative Story' })
 
-type MyRoom = Pick<RoomRow, 'code' | 'theme' | 'genre' | 'status' | 'current_round' | 'rounds_total' | 'endless' | 'cover_url' | 'host_id' | 'created_at'>
+type MyRoom = Pick<RoomRow, 'code' | 'theme' | 'genre' | 'mode' | 'status' | 'current_round' | 'rounds_total' | 'endless' | 'cover_url' | 'host_id' | 'created_at'>
 interface Entry { name: string, joined_at: string, rooms: MyRoom | null }
 
 const state = ref<'loading' | 'ready' | 'error'>('loading')
@@ -24,7 +24,7 @@ async function load() {
       entries.value = []
     } else {
       const { data, error } = await supabase.from('players')
-        .select('name, joined_at, rooms(code, theme, genre, status, current_round, rounds_total, endless, cover_url, host_id, created_at)')
+        .select('name, joined_at, rooms(code, theme, genre, mode, status, current_round, rounds_total, endless, cover_url, host_id, created_at)')
         .eq('user_id', userId.value)
         .order('joined_at', { ascending: false })
       if (error) throw error
@@ -43,6 +43,7 @@ const finished = computed(() => rooms.value.filter(r => r.status === 'finished')
 
 function progress(r: MyRoom): string {
   if (r.status === 'lobby') return 'In the lobby'
+  if (r.mode === 'open') return `${roundLabel(r)} · open for writing`
   return `${roundLabel(r)} · ${r.status === 'writing' ? 'writing now' : r.status === 'merging' ? 'weaving the chapter' : 'reading the chapter'}`
 }
 const when = (iso: string) => new Date(iso).toLocaleDateString([], { day: 'numeric', month: 'short', year: 'numeric' })

@@ -28,6 +28,12 @@ export interface RoomRow {
   cover_url: string | null
   cover_started_at: string | null
   cover_error: string | null
+  /** Open story: the AI's suggested chapter break, shown to the host. */
+  break_hint_seq: number | null
+  break_hint_reason: string | null
+  hint_checked_count: number
+  /** Open story: who wrote the latest part (nobody writes twice in a row). */
+  last_part_by: string | null
 }
 
 export interface PlayerRow {
@@ -46,6 +52,10 @@ export interface FragmentRow {
   status: 'submitted' | 'skipped'
   text: string | null
   created_at: string
+  /** Order of parts in an open story (0 in the other modes). */
+  seq: number
+  /** Set when the host removed the part from an open story; the text is kept. */
+  hidden_at: string | null
 }
 
 export interface ChapterRow {
@@ -97,17 +107,20 @@ export function toSettings(room: RoomRow): Settings {
 }
 
 /** "Round 7" in an endless game, "Round 2 of 5" otherwise. */
-export function roundLabel(room: Pick<RoomRow, 'current_round' | 'rounds_total' | 'endless'>): string {
+export function roundLabel(room: Pick<RoomRow, 'current_round' | 'rounds_total' | 'endless' | 'mode'>): string {
+  if (room.mode === 'open') return `Chapter ${room.current_round}`
   return room.endless ? `Round ${room.current_round}` : `Round ${room.current_round} of ${room.rounds_total}`
 }
 
 /** "Endless" or "3 rounds", for room summaries. */
-export function roundsSummary(room: Pick<RoomRow, 'rounds_total' | 'endless'>): string {
+export function roundsSummary(room: Pick<RoomRow, 'rounds_total' | 'endless' | 'mode'>): string {
+  if (room.mode === 'open') return 'Join any time'
   return room.endless ? 'Endless' : `${room.rounds_total} rounds`
 }
 
 export const MODE_LABELS: Record<Mode, { label: string, description: string }> = {
   chaos: { label: 'Chaos Mode', description: 'Everyone writes at once, drafts stay hidden, and AI weaves them into one chapter.' },
   fixed: { label: 'Fixed order', description: 'Take turns in a known order. Everyone reads the story as it grows.' },
-  random: { label: 'Random order', description: 'Take turns in a surprise order. Everyone writes once per round.' }
+  random: { label: 'Random order', description: 'Take turns in a surprise order. Everyone writes once per round.' },
+  open: { label: 'Open story', description: 'No rounds, no timer. Anyone can join and add a part at any time; the host ends the chapters.' }
 }

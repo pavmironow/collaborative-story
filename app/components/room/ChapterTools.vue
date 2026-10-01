@@ -8,7 +8,7 @@ import { canRevise, currentChapterText, isEdited, REVISION_LIMITS, versionLabel 
  */
 const props = defineProps<{ room: RoomRow, chapter: ChapterRow, fragments: FragmentRow[], isHost: boolean }>()
 
-const parts = computed(() => props.fragments.filter(f => f.round === props.chapter.round && f.status === 'submitted'))
+const parts = computed(() => props.fragments.filter(f => f.round === props.chapter.round && f.status === 'submitted' && !f.hidden_at))
 const revisable = computed(() => props.isHost && canRevise(props.room, props.chapter, parts.value.length).ok)
 const edited = computed(() => isEdited(props.chapter))
 

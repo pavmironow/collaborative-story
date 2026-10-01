@@ -22,15 +22,21 @@ const state = reactive<Schema>({
   isPublic: false
 })
 
-const visibilityItems = [
+const visibilityItems = computed(() => [
   { value: 'private', label: 'Private', description: 'Only people with the link or code can join.' },
-  { value: 'public', label: 'Public', description: 'Listed on the homepage: anyone can see the theme and join until the story starts.' }
-]
+  {
+    value: 'public',
+    label: 'Public',
+    description: state.mode === 'open'
+      ? 'Listed on the homepage: anyone can see the theme and join while the story is being written.'
+      : 'Listed on the homepage: anyone can see the theme and join until the story starts.'
+  }
+])
 const visibility = computed({
   get: () => state.isPublic ? 'public' : 'private',
   set: (v: string) => { state.isPublic = v === 'public' }
 })
-const modeItems = (['chaos', 'fixed', 'random'] as Mode[]).map(value => ({ value, ...MODE_LABELS[value] }))
+const modeItems = (['chaos', 'open', 'fixed', 'random'] as Mode[]).map(value => ({ value, ...MODE_LABELS[value] }))
 const charLimitItems = [150, 300, 500, 800].map(n => ({ label: `${n} characters`, value: n }))
 const timeItems = [30, 60, 90, 120, 180].map(s => ({ label: formatDuration(s), value: s }))
 const timeHint = computed(() => state.mode === 'chaos' ? 'Per round: everyone writes at the same time.' : 'Per player turn.')
@@ -135,8 +141,23 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         />
       </UFormField>
 
-      <div class="grid gap-4 sm:grid-cols-3">
+      <p
+        v-if="state.mode === 'open'"
+        class="text-sm text-muted"
+      >
+        <UIcon
+          name="i-lucide-scroll-text"
+          class="align-middle"
+        />
+        No rounds and no timer: the story stays open for anyone to add to until you end it.
+      </p>
+
+      <div
+        class="grid gap-4"
+        :class="state.mode === 'open' ? 'sm:grid-cols-1' : 'sm:grid-cols-3'"
+      >
         <UFormField
+          v-if="state.mode !== 'open'"
           label="Rounds"
           name="roundsTotal"
           :help="state.endless ? `You end the story (max ${LIMITS.endlessRounds} rounds)` : `${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
@@ -174,6 +195,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         </UFormField>
 
         <UFormField
+          v-if="state.mode !== 'open'"
           label="Time limit"
           name="timeLimitS"
           :help="timeHint"

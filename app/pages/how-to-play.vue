@@ -30,6 +30,14 @@ const sections = [
     ]
   },
   {
+    icon: 'i-lucide-scroll-text',
+    title: 'Open story',
+    body: [
+      'No rounds and no timer. Anyone with the link can join at any time and add a part; everyone sees it straight away. You can write again once someone else has added a part.',
+      'The host ends a chapter after any part, and the AI may suggest a good place. The host can also remove a part that does not belong, and ends the story when it feels done.'
+    ]
+  },
+  {
     icon: 'i-lucide-timer',
     title: 'Rounds, timer and skips',
     body: [
