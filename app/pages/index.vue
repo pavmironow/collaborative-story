@@ -15,7 +15,8 @@ const state = reactive<Schema>({
   genre: DEFAULT_GENRE,
   roundsTotal: LIMITS.rounds.default,
   charLimit: LIMITS.charLimit.default,
-  timeLimitS: LIMITS.timeLimitS.default
+  timeLimitS: LIMITS.timeLimitS.default,
+  endless: false
 })
 
 const modeItems = (['chaos', 'fixed', 'random'] as Mode[]).map(value => ({ value, ...MODE_LABELS[value] }))
@@ -147,13 +148,26 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
         <UFormField
           label="Rounds"
           name="roundsTotal"
-          :help="`${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
+          :help="state.endless ? `You end the story (max ${LIMITS.endlessRounds} rounds)` : `${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
         >
+          <UInput
+            v-if="state.endless"
+            model-value="∞"
+            disabled
+            aria-label="Rounds: endless"
+            class="w-full"
+          />
           <UInputNumber
+            v-else
             v-model="state.roundsTotal"
             :min="LIMITS.rounds.min"
             :max="LIMITS.rounds.max"
             class="w-full"
+          />
+          <USwitch
+            v-model="state.endless"
+            label="Endless"
+            class="mt-2"
           />
         </UFormField>
 

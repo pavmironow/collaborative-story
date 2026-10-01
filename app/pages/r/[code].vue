@@ -98,6 +98,9 @@ useHead({ title: computed(() => room.value ? `Room ${room.value.code} · Collabo
       <RoomMerging
         v-else-if="room.status === 'merging'"
         :room="room"
+        :players="players"
+        :fragments="fragments"
+        :chapters="chapters"
       />
 
       <RoomChaosReveal

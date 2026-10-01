@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
+import { roundLabel } from '#shared/room'
 
 const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[], isHost: boolean }>()
 
@@ -17,29 +18,47 @@ const hostName = computed(() => names.value.get(props.room.host_id) ?? 'the host
 
 const continuing = ref(false)
 const error = ref('')
-async function next() {
-  continuing.value = true
+const ending = ref(false)
+const confirmEnd = ref(false)
+async function next(finish = false) {
+  const busy = finish ? ending : continuing
+  busy.value = true
   error.value = ''
   try {
-    await api(`/api/rooms/${props.room.code}/next`, { method: 'POST' })
+    await api(`/api/rooms/${props.room.code}/next`, { method: 'POST', body: finish ? { finish: true } : {} })
+    confirmEnd.value = false
   } catch (e) {
     error.value = (e as { statusMessage?: string }).statusMessage ?? 'Could not continue. Try again.'
   } finally {
-    continuing.value = false
+    busy.value = false
   }
 }
+const waitingFor = computed(() => {
+  if (last.value) return 'finish the story'
+  return props.room.endless ? 'start the next round or end the story' : 'start the next round'
+})
 </script>
 
 <template>
   <div class="space-y-6">
     <div>
       <p class="text-sm font-medium text-primary">
-        Round {{ round }} of {{ room.rounds_total }} · reveal
+        {{ roundLabel(room) }} · reveal
       </p>
       <h1 class="text-2xl font-bold">
         Chapter {{ round }}
       </h1>
     </div>
+
+    <RoomStorySoFar
+      v-if="round > 1"
+      :theme="room.theme"
+      :chapters="chapters"
+      :fragments="fragments"
+      :players="players"
+      :before-round="round"
+      collapsed
+    />
 
     <section
       v-if="paragraphs.length"
@@ -120,21 +139,61 @@ async function next() {
         :title="error"
         class="mb-3"
       />
-      <UButton
+      <div
         v-if="isHost"
-        size="xl"
-        block
-        :loading="continuing"
-        :icon="last ? 'i-lucide-book-check' : 'i-lucide-arrow-right'"
-        @click="next"
+        class="flex gap-2"
       >
-        {{ last ? 'Finish the story' : `Start round ${round + 1}` }}
-      </UButton>
+        <UButton
+          size="xl"
+          block
+          class="flex-1"
+          :loading="continuing"
+          :disabled="ending"
+          :icon="last ? 'i-lucide-book-check' : 'i-lucide-arrow-right'"
+          @click="next()"
+        >
+          {{ last ? 'Finish the story' : `Start round ${round + 1}` }}
+        </UButton>
+        <UModal
+          v-if="room.endless && !last"
+          v-model:open="confirmEnd"
+          :title="`End the story after chapter ${round}?`"
+          description="Everyone will see the finished story. This can’t be undone."
+        >
+          <UButton
+            size="xl"
+            color="neutral"
+            variant="outline"
+            icon="i-lucide-book-check"
+            :disabled="continuing"
+          >
+            End story
+          </UButton>
+          <template #footer>
+            <div class="flex w-full justify-end gap-2">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                @click="confirmEnd = false"
+              >
+                Keep writing
+              </UButton>
+              <UButton
+                :loading="ending"
+                icon="i-lucide-book-check"
+                @click="next(true)"
+              >
+                End story
+              </UButton>
+            </div>
+          </template>
+        </UModal>
+      </div>
       <p
         v-else
         class="text-center text-muted"
       >
-        Waiting for {{ hostName }} to {{ last ? 'finish the story' : 'start the next round' }}…
+        Waiting for {{ hostName }} to {{ waitingFor }}…
       </p>
     </div>
   </div>

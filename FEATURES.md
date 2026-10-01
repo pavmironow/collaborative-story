@@ -3,10 +3,10 @@
 ## Rule: one feature = one branch = one PR
 
 1. Branch from the latest `master` and name it `feat/<name>` from the table below.
-2. Keep the PR small and focused on one feature. Open it early as a **draft** so others can see progress.
+2. Keep the PR small and focused on one feature. Open it as a normal PR (not a draft) once the feature works.
 3. Before you ask for review, run `pnpm test` and make sure it passes.
 4. In the PR description, name the [objectives](README.md#goal) the PR delivers and the [must-never-break rules](README.md#what-must-never-break) it touches.
-5. One teammate gives a quick review (≤ 10 min), then **squash-merge** and delete the branch.
+5. Review the diff, then **squash-merge** and delete the branch.
 6. Merge often. Rebase on `master` whenever a PR your feature depends on has been merged. Don't let a branch live longer than about 1.5 hours.
 
 ## Feature list
