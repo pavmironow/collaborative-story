@@ -5,7 +5,7 @@ import type { ChapterRow, FragmentRow, PlayerRow, RoomRow } from '#shared/room'
 import { roundLabel } from '#shared/room'
 
 /**
- * Open story: one live feed. Anyone writes whenever it is not their turn twice in a row; the
+ * Endless story (mode `open`): one live feed. Anyone writes whenever it is not their turn twice in a row; the
  * host ends chapters after any part (the AI may suggest where), removes parts and ends the story.
  */
 const props = defineProps<{ room: RoomRow, players: PlayerRow[], fragments: FragmentRow[], chapters: ChapterRow[], userId: string, isHost: boolean, online: Set<string> }>()
@@ -82,7 +82,7 @@ watch(() => chapterParts.value.length, () => nextTick(() => feedEnd.value?.scrol
     <div class="flex items-start justify-between gap-4">
       <div>
         <p class="text-sm font-medium text-primary">
-          Open story · anyone can add a part
+          Endless story · anyone can add a part
         </p>
         <h1 class="text-2xl font-bold">
           {{ roundLabel(room) }}

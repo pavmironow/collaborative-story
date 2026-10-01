@@ -28,11 +28,11 @@ export interface RoomRow {
   cover_url: string | null
   cover_started_at: string | null
   cover_error: string | null
-  /** Open story: the AI's suggested chapter break, shown to the host. */
+  /** Endless story: the AI's suggested chapter break, shown to the host. */
   break_hint_seq: number | null
   break_hint_reason: string | null
   hint_checked_count: number
-  /** Open story: who wrote the latest part (nobody writes twice in a row). */
+  /** Endless story: who wrote the latest part (nobody writes twice in a row). */
   last_part_by: string | null
 }
 
@@ -52,9 +52,9 @@ export interface FragmentRow {
   status: 'submitted' | 'skipped'
   text: string | null
   created_at: string
-  /** Order of parts in an open story (0 in the other modes). */
+  /** Order of parts in an endless story (0 in the other modes). */
   seq: number
-  /** Set when the host removed the part from an open story; the text is kept. */
+  /** Set when the host removed the part from an endless story; the text is kept. */
   hidden_at: string | null
 }
 
@@ -122,5 +122,5 @@ export const MODE_LABELS: Record<Mode, { label: string, description: string }> =
   chaos: { label: 'Chaos Mode', description: 'Everyone writes at once, drafts stay hidden, and AI weaves them into one chapter.' },
   fixed: { label: 'Fixed order', description: 'Take turns in a known order. Everyone reads the story as it grows.' },
   random: { label: 'Random order', description: 'Take turns in a surprise order. Everyone writes once per round.' },
-  open: { label: 'Open story', description: 'No rounds, no timer. Anyone can join and add a part at any time; the host ends the chapters.' }
+  open: { label: 'Endless story', description: 'No rounds, no timer. Anyone can join, read what is there and continue it, until the host wraps it up.' }
 }

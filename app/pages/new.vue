@@ -149,7 +149,7 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           name="i-lucide-scroll-text"
           class="align-middle"
         />
-        No rounds and no timer: the story stays open for anyone to add to until you end it.
+        No rounds and no timer: the story keeps growing, open for anyone to add to, until you wrap it up.
       </p>
 
       <div
@@ -160,26 +160,13 @@ async function onSubmit(event: FormSubmitEvent<Schema>) {
           v-if="state.mode !== 'open'"
           label="Rounds"
           name="roundsTotal"
-          :help="state.endless ? `You end the story (max ${LIMITS.endlessRounds} rounds)` : `${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
+          :help="`${LIMITS.rounds.min}–${LIMITS.rounds.max}`"
         >
-          <UInput
-            v-if="state.endless"
-            model-value="∞"
-            disabled
-            aria-label="Rounds: endless"
-            class="w-full"
-          />
           <UInputNumber
-            v-else
             v-model="state.roundsTotal"
             :min="LIMITS.rounds.min"
             :max="LIMITS.rounds.max"
             class="w-full"
-          />
-          <USwitch
-            v-model="state.endless"
-            label="Endless"
-            class="mt-2"
           />
         </UFormField>
 
