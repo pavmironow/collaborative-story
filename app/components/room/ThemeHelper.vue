@@ -61,7 +61,7 @@ function undo() {
 
     <div
       v-if="suggestion"
-      class="rounded-lg border border-primary/40 bg-primary/5 p-3"
+      class="ink-card bg-coral-50 p-3 dark:bg-coral-950/40"
       role="region"
       aria-label="AI suggestion"
       aria-live="polite"

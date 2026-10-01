@@ -106,8 +106,8 @@ const time = (iso: string) => new Date(iso).toLocaleString([], { hour: '2-digit'
           <li
             v-for="v in versions"
             :key="v.version"
-            class="rounded-lg border p-3"
-            :class="v.version === chapter.version ? 'border-primary/40 bg-primary/5' : 'border-default'"
+            class="ink-card p-3"
+            :class="v.version === chapter.version ? 'bg-coral-50 dark:bg-coral-950/40' : 'bg-default'"
           >
             <div class="flex flex-wrap items-center justify-between gap-2">
               <p class="text-sm font-semibold">

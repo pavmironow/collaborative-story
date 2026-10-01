@@ -73,7 +73,7 @@ const waitingFor = computed(() => {
     <section
       v-if="paragraphs.length"
       aria-label="Chapter"
-      class="space-y-4 rounded-lg border border-primary/30 bg-primary/5 p-4"
+      class="ink-card space-y-4 bg-coral-50 p-4 dark:bg-coral-950/40"
     >
       <p class="flex items-center gap-1.5 text-xs font-semibold text-primary">
         <UIcon name="i-lucide-sparkles" /> Woven by AI from everyone’s parts
@@ -113,7 +113,7 @@ const waitingFor = computed(() => {
         <li
           v-for="f in parts"
           :key="f.id"
-          class="rounded-lg border border-default p-3"
+          class="ink-card bg-default p-3"
         >
           <p class="text-xs font-semibold text-muted">
             {{ names.get(f.player_id) }}

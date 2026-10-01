@@ -44,5 +44,13 @@ export default defineNuxtConfig({
         braceStyle: '1tbs'
       }
     }
+  },
+
+  // Playful ink: rounded display headings, friendly body text (see main.css).
+  fonts: {
+    families: [
+      { name: 'Nunito', weights: [400, 600, 700, 800] },
+      { name: 'Baloo 2', weights: [500, 600, 700, 800] }
+    ]
   }
 })

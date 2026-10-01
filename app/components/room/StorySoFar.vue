@@ -26,7 +26,7 @@ const heading = computed(() => {
 <template>
   <section
     aria-labelledby="story-so-far"
-    class="rounded-lg border border-default bg-elevated/50 p-4"
+    class="ink-card bg-sky-50 p-4 dark:bg-elevated"
   >
     <h2
       id="story-so-far"
